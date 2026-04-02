@@ -101,6 +101,7 @@ This is **diagnostic only**. The simulator itself does not depend on ONNX Runtim
 ```text
 Coinflip_V1.10.pb
 README.md
+LICENSE
 ```
 
 ## Intended use
@@ -116,7 +117,7 @@ This project is aimed at:
 
 This project is licensed under the **GNU General Public License v3.0** (**GPL-3.0**).
 
-If you publish the repository on GitHub, add a `LICENSE` file containing the full GPL-3.0 text so the repository metadata is detected correctly.
+See the [LICENSE](LICENSE) file for the full license text.
 
 ## Author
 
