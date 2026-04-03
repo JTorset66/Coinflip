@@ -75,6 +75,23 @@ That means:
 - **Thread Safe** runtime enabled in compiler options
 - Recommended: compile **without the debugger** for performance testing
 
+## Command-line build
+
+`pbcompiler` is available on this machine, and the repo now includes a build helper.
+
+Build the default app with:
+
+```powershell
+.\build-purebasic.ps1
+```
+
+The script compiles:
+
+- `Coinflip_V1.10.pb`
+- with `Thread Safe` enabled
+- with optimizer enabled
+- into `build/Coinflip_V1.10.exe`
+
 ## Optional runtime dependency
 
 The program can perform a one-time embedded ONNX Runtime self-test if `onnxruntime.dll` is available.
