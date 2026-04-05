@@ -1,0 +1,73 @@
+name: Build Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on:
+      - self-hosted
+      - windows
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Verify PureBasic compiler is available
+        shell: powershell
+        run: |
+          $compiler = Get-Command pbcompiler -ErrorAction SilentlyContinue
+          if (-not $compiler) {
+            throw "pbcompiler was not found on PATH for this runner."
+          }
+          Write-Host "Using compiler:" $compiler.Source
+
+      - name: Build executable
+        shell: powershell
+        env:
+          WINDOWS_CERT_THUMBPRINT: ${{ secrets.WINDOWS_CERT_THUMBPRINT }}
+          RFC3161_TIMESTAMP_URL: ${{ secrets.RFC3161_TIMESTAMP_URL }}
+        run: |
+          if ($env:WINDOWS_CERT_THUMBPRINT) {
+            .\build-purebasic.ps1 `
+              -CertificateThumbprint $env:WINDOWS_CERT_THUMBPRINT `
+              -TimestampUrl $env:RFC3161_TIMESTAMP_URL
+          } else {
+            .\build-purebasic.ps1
+          }
+
+      - name: Create SHA256 checksum
+        shell: powershell
+        run: |
+          $exe = Get-ChildItem .\build\*.exe | Select-Object -First 1
+          if (-not $exe) {
+            throw "No executable was produced in the build directory."
+          }
+          $hash = Get-FileHash $exe.FullName -Algorithm SHA256
+          "$($hash.Hash.ToLowerInvariant()) *$($exe.Name)" | Set-Content -Path (Join-Path $exe.Directory.FullName "$($exe.Name).sha256") -Encoding ascii
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: coinflip-windows-x64
+          path: |
+            build/*.exe
+            build/*.sha256
+
+      - name: Publish tagged release
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            build/*.exe
+            build/*.sha256
+          generate_release_notes: true
+

@@ -92,6 +92,53 @@ The script compiles:
 - with optimizer enabled
 - into `build/Coinflip_V1.10.exe`
 
+To sign the compiled EXE with a certificate already installed in the Windows certificate store:
+
+```powershell
+.\build-purebasic.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>"
+```
+
+To add RFC 3161 timestamping during signing:
+
+```powershell
+.\build-purebasic.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>" -TimestampUrl "<YOUR_TIMESTAMP_URL>"
+```
+
+You can inspect local code-signing certificates with:
+
+```powershell
+Get-ChildItem Cert:\CurrentUser\My, Cert:\LocalMachine\My |
+  Where-Object {
+    $_.HasPrivateKey -and (
+      $_.EnhancedKeyUsageList.ObjectId -contains '1.3.6.1.5.5.7.3.3' -or
+      $_.EnhancedKeyUsageList.FriendlyName -contains 'Code Signing'
+    )
+  } |
+  Select-Object Subject, Thumbprint, NotAfter
+```
+
+## Smart App Control note
+
+For Windows Smart App Control compatibility, Microsoft currently requires the app to be signed with an RSA-based code-signing certificate from a trusted provider, or through Microsoft Trusted Signing. A self-signed certificate or an internal test certificate may produce a digital signature, but it will not make Smart App Control trust the app.
+
+## Releases
+
+Tagged releases are intended to use the format `v*`.
+
+The repository includes a self-hosted GitHub Actions workflow at [`.github/workflows/release-self-hosted.yml`](.github/workflows/release-self-hosted.yml) for Windows builds. It is designed for a controlled Windows runner with PureBasic installed and can optionally sign the build if a trusted certificate thumbprint is provided through repository secrets.
+
+Until the project completes SignPath Foundation onboarding or another trusted signing setup, release binaries may be unsigned.
+
+Release steps are summarized in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
+
+## Code signing policy
+
+The project code-signing and release-signing rules are documented in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
+
+## Privacy
+
+This program does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it.
+
 ## Optional runtime dependency
 
 The program can perform a one-time embedded ONNX Runtime self-test if `onnxruntime.dll` is available.
