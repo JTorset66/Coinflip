@@ -135,6 +135,8 @@ Release steps are summarized in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
 
 The project code-signing and release-signing rules are documented in [`CODE_SIGNING_POLICY.md`](CODE_SIGNING_POLICY.md).
 
+For SignPath Foundation onboarding preparation, see [`SIGNPATH_APPLICATION.md`](SIGNPATH_APPLICATION.md).
+
 ## Privacy
 
 This program does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it.
