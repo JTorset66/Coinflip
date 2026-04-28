@@ -30,29 +30,39 @@ jobs:
           }
           Write-Host "Using compiler:" $compiler.Source
 
-      - name: Build executable
+      - name: Verify Inno Setup is available
+        shell: powershell
+        run: |
+          $iscc = Get-Command iscc -ErrorAction SilentlyContinue
+          if (-not $iscc -and -not (Test-Path "C:\Program Files (x86)\Inno Setup 6\ISCC.exe")) {
+            throw "ISCC.exe was not found on PATH for this runner."
+          }
+
+      - name: Build executable and installer
         shell: powershell
         env:
           WINDOWS_CERT_THUMBPRINT: ${{ secrets.WINDOWS_CERT_THUMBPRINT }}
           RFC3161_TIMESTAMP_URL: ${{ secrets.RFC3161_TIMESTAMP_URL }}
         run: |
           if ($env:WINDOWS_CERT_THUMBPRINT) {
-            .\build-purebasic.ps1 `
+            .\build-installer.ps1 `
               -CertificateThumbprint $env:WINDOWS_CERT_THUMBPRINT `
               -TimestampUrl $env:RFC3161_TIMESTAMP_URL
           } else {
-            .\build-purebasic.ps1
+            .\build-installer.ps1
           }
 
-      - name: Create SHA256 checksum
+      - name: Create SHA256 checksums
         shell: powershell
         run: |
-          $exe = Get-ChildItem .\build\*.exe | Select-Object -First 1
-          if (-not $exe) {
-            throw "No executable was produced in the build directory."
+          $artifacts = @(Get-ChildItem .\build\*.exe)
+          if ($artifacts.Count -eq 0) {
+            throw "No executables were produced in the build directory."
           }
-          $hash = Get-FileHash $exe.FullName -Algorithm SHA256
-          "$($hash.Hash.ToLowerInvariant()) *$($exe.Name)" | Set-Content -Path (Join-Path $exe.Directory.FullName "$($exe.Name).sha256") -Encoding ascii
+          $artifacts | ForEach-Object {
+            $hash = Get-FileHash $_.FullName -Algorithm SHA256
+            "$($hash.Hash.ToLowerInvariant()) *$($_.Name)" | Set-Content -Path (Join-Path $_.Directory.FullName "$($_.Name).sha256") -Encoding ascii
+          }
 
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
@@ -70,4 +80,3 @@ jobs:
             build/*.exe
             build/*.sha256
           generate_release_notes: true
-

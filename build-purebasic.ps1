@@ -36,6 +36,32 @@ function Get-CodeSigningCertificate {
     throw "Code-signing certificate not found for thumbprint $normalizedThumbprint in Cert:\CurrentUser\My or Cert:\LocalMachine\My."
 }
 
+function Get-PureBasicIdeIconPath {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$SourcePath
+    )
+
+    $iconLine = Get-Content -Path $SourcePath |
+        Where-Object { $_ -match "^\s*;\s*UseIcon\s*=\s*(.+?)\s*$" } |
+        Select-Object -Last 1
+
+    if (-not $iconLine) {
+        return $null
+    }
+
+    $iconValue = ($iconLine -replace "^\s*;\s*UseIcon\s*=\s*", "").Trim()
+    if ([string]::IsNullOrWhiteSpace($iconValue)) {
+        return $null
+    }
+
+    if ([System.IO.Path]::IsPathRooted($iconValue)) {
+        return $iconValue
+    }
+
+    return Join-Path (Split-Path -Parent $SourcePath) $iconValue
+}
+
 $compiler = Get-Command pbcompiler -ErrorAction SilentlyContinue
 if (-not $compiler) {
     throw "pbcompiler was not found on PATH. Open a new terminal and try again."
@@ -55,7 +81,19 @@ $null = New-Item -ItemType Directory -Path $outputRoot -Force
 $exeName = [System.IO.Path]::GetFileNameWithoutExtension($resolvedSource) + ".exe"
 $outputPath = Join-Path $outputRoot $exeName
 
-& $compiler.Source $resolvedSource /THREAD /OPTIMIZER /OUTPUT $outputPath
+$compileArgs = @($resolvedSource, "/THREAD", "/OPTIMIZER", "/OUTPUT", $outputPath)
+$iconPath = Get-PureBasicIdeIconPath -SourcePath $resolvedSource
+if ($iconPath) {
+    if (Test-Path $iconPath) {
+        $compileArgs += @("/ICON", $iconPath)
+        Write-Host "Using icon:" $iconPath
+    }
+    else {
+        Write-Warning "PureBasic IDE icon was referenced but not found: $iconPath"
+    }
+}
+
+& $compiler.Source @compileArgs
 
 if ($LASTEXITCODE -ne 0) {
     throw "PureBasic compilation failed."

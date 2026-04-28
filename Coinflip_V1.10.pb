@@ -218,8 +218,8 @@ EndDataSection
 ;   - Row/button sizes:     #ROW_H, #BTN_H, #SMALLBTN_H
 ;   - Plot sizing:          #PLOT_BASE_HEIGHT, #PLOT_HEIGHT_MULTIPLIER, #PLOT_MIN_HEIGHT
 ; =============================================================================
-#WIN_W         = 1920
-#WIN_H         = 1200
+#WIN_W         = 1600
+#WIN_H         = 980
 #WIN_MIN_W     = 900
 #WIN_MIN_H     = 700
 
@@ -6058,7 +6058,10 @@ Procedure BuildGUI()
   gBaseTitle = "Coin-Flip Deviation Simulator (GUI) " + #ProgramVersion$
   Protected winW_PB.i = PhysToPB_X(#WIN_W)
   Protected winH_PB.i = PhysToPB_Y(#WIN_H)
-  OpenWindow(#WinMain, 0, 0, winW_PB, winH_PB, gBaseTitle, #PB_Window_SystemMenu | #PB_Window_ScreenCentered | #PB_Window_MinimizeGadget | #PB_Window_SizeGadget | #PB_Window_MaximizeGadget)
+  If OpenWindow(#WinMain, 0, 0, winW_PB, winH_PB, gBaseTitle, #PB_Window_SystemMenu | #PB_Window_ScreenCentered | #PB_Window_MinimizeGadget | #PB_Window_SizeGadget | #PB_Window_MaximizeGadget) = 0
+    MessageRequester("Coinflip", "Could not create the main window.", #PB_MessageRequester_Error)
+    End
+  EndIf
   SetWindowCallback(@MainWinCB(), #WinMain)
   WindowBounds(#WinMain, PhysToPB_X(#WIN_MIN_W), PhysToPB_Y(#WIN_MIN_H), #PB_Ignore, #PB_Ignore)
 
@@ -6547,7 +6550,7 @@ End
 ; EnableAsm
 ; EnableThread
 ; EnableXP
-; UseIcon = Awicons-Vista-Artistic-Coin.ico
+; UseIcon = Noto_Emoji_Coin.ico
 ; Executable = C:\Users\JT\Desktop\CoinFlips.exe
 ; DisableDebugger
 ; EnablePurifier

@@ -26,16 +26,17 @@ Only binaries built from this repository and maintained by this project may be s
 ## Release build policy
 
 - Release artifacts must be built from source in this repository.
-- Builds should be produced by an automated workflow on a controlled Windows runner with PureBasic installed.
+- Builds should be produced by an automated workflow on a controlled Windows runner with PureBasic and Inno Setup installed.
 - Release tags should use the format `v*`.
-- The produced executable name must match the project version embedded in the source and build output.
-- Build scripts and workflow definitions are part of the trusted source and must be reviewed with the same care as application code.
+- The produced executable and installer names must match the project version embedded in the source and build output.
+- Build scripts, installer scripts, and workflow definitions are part of the trusted source and must be reviewed with the same care as application code.
 
 ## Signing policy
 
 - Only project-owned binaries may be signed.
 - Third-party upstream executables and DLLs must not be re-signed as if they were project binaries.
-- If signing is enabled for a release build, the signed artifact must come from the automated release workflow or an equivalent controlled maintainer-run process.
+- If signing is enabled for a release build, the signed artifacts must come from the automated release workflow or an equivalent controlled maintainer-run process.
+- The installer must contain only project release files and documented dependencies.
 - Every signing event must correspond to a release the project intends to publish.
 
 ## Privacy policy
@@ -48,10 +49,9 @@ The application can optionally perform a local self-test against `onnxruntime.dl
 
 - The project must not include malware, potentially unwanted software, or features intended to bypass platform security controls.
 - System changes must be transparent to the user.
-- If the project later adds an installer, it must also provide clear uninstall instructions or an uninstall mechanism.
+- The installer must provide clear uninstall support.
 
 ## Repository security expectations
 
 - Maintainers involved in releases should use multi-factor authentication for GitHub and any signing platform.
 - Release approvals should only be given for reviewed code that matches the intended tagged source revision.
-

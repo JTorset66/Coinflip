@@ -73,6 +73,7 @@ That means:
 - **PureBasic x64**
 - **Windows** target
 - **Thread Safe** runtime enabled in compiler options
+- **Inno Setup 6** for installer builds
 - Recommended: compile **without the debugger** for performance testing
 
 ## Command-line build
@@ -91,17 +92,29 @@ The script compiles:
 - with `Thread Safe` enabled
 - with optimizer enabled
 - into `build/Coinflip_V1.10.exe`
+- with the Noto Emoji coin icon referenced by the PureBasic IDE `UseIcon` setting
 
-To sign the compiled EXE with a certificate already installed in the Windows certificate store:
+Build the installer with:
 
 ```powershell
-.\build-purebasic.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>"
+.\build-installer.ps1
+```
+
+The installer script builds the app first, then creates:
+
+- `build/Coinflip_V1.10.exe`
+- `build/Coinflip_V1.10_Setup.exe`
+
+To sign the compiled EXE and installer with a certificate already installed in the Windows certificate store:
+
+```powershell
+.\build-installer.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>"
 ```
 
 To add RFC 3161 timestamping during signing:
 
 ```powershell
-.\build-purebasic.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>" -TimestampUrl "<YOUR_TIMESTAMP_URL>"
+.\build-installer.ps1 -CertificateThumbprint "<YOUR_CERT_THUMBPRINT>" -TimestampUrl "<YOUR_TIMESTAMP_URL>"
 ```
 
 You can inspect local code-signing certificates with:
@@ -125,7 +138,7 @@ For Windows Smart App Control compatibility, Microsoft currently requires the ap
 
 Tagged releases are intended to use the format `v*`.
 
-The repository includes a self-hosted GitHub Actions workflow at [`.github/workflows/release-self-hosted.yml`](.github/workflows/release-self-hosted.yml) for Windows builds. It is designed for a controlled Windows runner with PureBasic installed and can optionally sign the build if a trusted certificate thumbprint is provided through repository secrets.
+The repository includes a self-hosted GitHub Actions workflow at [`.github/workflows/release-self-hosted.yml`](.github/workflows/release-self-hosted.yml) for Windows builds. It is designed for a controlled Windows runner with PureBasic and Inno Setup installed and can optionally sign the build if a trusted certificate thumbprint is provided through repository secrets.
 
 Until the project completes SignPath Foundation onboarding or another trusted signing setup, release binaries may be unsigned.
 
@@ -147,6 +160,24 @@ The program can perform a one-time embedded ONNX Runtime self-test if `onnxrunti
 
 This is **diagnostic only**. The simulator itself does not depend on ONNX Runtime for its core sampling logic.
 
+## Installer behavior
+
+The installer:
+
+- installs into `Program Files\Coinflip`
+- creates a Start menu shortcut
+- can create a desktop shortcut if selected during setup
+- offers to launch Coinflip after installation
+- supports repair install from Windows Apps/Programs maintenance
+- supports uninstall from Windows Apps/Programs maintenance
+- does not add startup entries
+- does not use tray behavior
+- removes installed files and shortcuts during uninstall
+
+## Third-party credits
+
+The Coinflip application icon uses the Noto Emoji coin image by Google, distributed under the Apache License 2.0. See [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md) for source and license details.
+
 ## How to use
 
 1. Open the source in PureBasic.
@@ -166,7 +197,17 @@ This is **diagnostic only**. The simulator itself does not depend on ONNX Runtim
 
 ```text
 Coinflip_V1.10.pb
+coinflip.iss
+build-purebasic.ps1
+build-installer.ps1
+Noto_Emoji_Coin.ico
+Noto_Emoji_Coin.png
 README.md
+THIRD_PARTY_NOTICES.md
+CODE_SIGNING_POLICY.md
+RELEASE_CHECKLIST.md
+SIGNPATH_APPLICATION.md
+SIGNPATH_EMAIL_DRAFT.md
 LICENSE
 ```
 

@@ -14,22 +14,28 @@ Project details:
 
 Project summary:
 
-Coinflip is a Windows x64 PureBasic desktop application for large-scale fair-coin simulation and deviation analysis. It supports exact bit-level simulation, multiple binomial sampling paths, multithreaded execution, live plotting, and optional binary output for later analysis.
+Coinflip is a Windows x64 PureBasic desktop application for large-scale fair-coin simulation and deviation analysis. It supports exact bit-level simulation, multiple binomial sampling paths, multithreaded execution, live plotting, optional binary output for later analysis, and a standard Windows installer.
 
 Why I am applying:
 
-Coinflip is distributed as a Windows desktop executable. Trusted code signing would help users verify that published binaries come from the public repository and would reduce Windows trust friction for open-source releases.
+Coinflip is distributed as a Windows desktop executable and installer. Trusted code signing would help users verify that published binaries come from the public repository and would reduce Windows trust friction for open-source releases.
 
 Repository policy links:
 
 - Code signing policy: https://github.com/JTorset66/Coinflip/blob/main/CODE_SIGNING_POLICY.md
 - Release checklist: https://github.com/JTorset66/Coinflip/blob/main/RELEASE_CHECKLIST.md
 
+Expected release artifacts:
+- Coinflip_V1.10.exe
+- Coinflip_V1.10_Setup.exe
+- SHA-256 checksum files for published executables
+
 Notes relevant to your requirements:
 
 - The project is public and released.
 - The project uses an OSI-approved open-source license.
 - The repository includes a public privacy statement and code signing policy.
+- The repository includes third-party icon attribution and license details.
 - The application does not transfer information to other networked systems unless specifically requested by the user or operator.
 - The repository includes a Windows release workflow intended for controlled release builds.
 
@@ -39,4 +45,3 @@ If you would like any additional project details, release information, or reposi
 
 Best regards,
 John Torset
-
