@@ -7,6 +7,7 @@ Use this checklist for public Coinflip releases.
 - Confirm the intended version number in `Coinflip_V1.10.pb`.
 - Confirm the intended version number and artifact names in `coinflip.iss`.
 - Review `README.md` for any release notes, usage notes, or dependency changes.
+- Review the release notes file for the intended GitHub release tag.
 - Review `INSTALLER_README.md` for user-facing app functionality and usage changes.
 - Confirm `THIRD_PARTY_NOTICES.md` is included with the installer and still matches the application icon.
 - Confirm the installer includes `INSTALLER_README.md` as installed `README.md`.

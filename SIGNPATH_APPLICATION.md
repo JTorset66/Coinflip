@@ -7,7 +7,7 @@ This document collects the information needed to apply for a free SignPath.io su
 - Project name: Coinflip
 - Project handle: coinflip
 - Repository: <https://github.com/JTorset66/Coinflip>
-- Latest public release: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10>
+- Latest public release: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10.2605.01368>
 - License: MIT
 - Maintainer: John Torset
 - Primary platform: Windows x64
@@ -27,7 +27,7 @@ This document collects the information needed to apply for a free SignPath.io su
 ## Current public links
 
 - Repository home: <https://github.com/JTorset66/Coinflip>
-- Release page: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10>
+- Release page: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10.2605.01368>
 - Code signing policy: <https://github.com/JTorset66/Coinflip/blob/main/CODE_SIGNING_POLICY.md>
 - Release checklist: <https://github.com/JTorset66/Coinflip/blob/main/RELEASE_CHECKLIST.md>
 
@@ -48,7 +48,7 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ### Released and documented
 
-- Version `v1.10` is publicly released on GitHub with binaries and checksum files.
+- Release `v1.10.2605.01368` is publicly released on GitHub with binaries and checksum files.
 - The repository README describes the project, build requirements, installer behavior, runtime notes, and usage.
 - `INSTALLER_README.md` is the user-facing README bundled into the installer and focuses on Coinflip functionality rather than build/release details.
 - The repository includes third-party icon attribution and Apache License 2.0 details.

@@ -146,6 +146,8 @@ For Windows Smart App Control compatibility, Microsoft currently requires an RSA
 
 Tagged releases are intended to use the format `v*`.
 
+The current public release notes are in [`RELEASE_NOTES_v1.10.2605.01368.md`](RELEASE_NOTES_v1.10.2605.01368.md). The original public release notes are preserved in [`RELEASE_NOTES_v1.10.md`](RELEASE_NOTES_v1.10.md).
+
 The repository includes a self-hosted GitHub Actions workflow at [`.github/workflows/release-self-hosted.yml`](.github/workflows/release-self-hosted.yml) for controlled Windows builds with PureBasic and Inno Setup installed. The workflow can optionally sign artifacts when a trusted certificate thumbprint is provided through repository secrets.
 
 Release steps are summarized in [`RELEASE_CHECKLIST.md`](RELEASE_CHECKLIST.md).
@@ -176,6 +178,7 @@ Coinflip does not transfer information to other networked systems unless specifi
 Coinflip_V1.10.pb
 Coinflip.code-workspace
 coinflip.iss
+.github/workflows/release-self-hosted.yml
 build-purebasic.ps1
 build-installer.ps1
 installer-wizard-image.bmp
@@ -187,8 +190,9 @@ INSTALLER_README.md
 THIRD_PARTY_NOTICES.md
 CODE_SIGNING_POLICY.md
 RELEASE_CHECKLIST.md
+RELEASE_NOTES_v1.10.2605.01368.md
+RELEASE_NOTES_v1.10.md
 SIGNPATH_APPLICATION.md
-SIGNPATH_EMAIL_DRAFT.md
 LICENSE
 ```
 
