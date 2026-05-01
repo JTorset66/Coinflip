@@ -6443,7 +6443,7 @@ ForEver
 ShutdownWorkerPool()
 
 End
-; IDE Options = PureBasic 6.30 (Windows - x64)
+; IDE Options = PureBasic 6.40 (Windows - x64)
 ; CursorPosition = 189
 ; FirstLine = 180
 ; Folding = ----------------------

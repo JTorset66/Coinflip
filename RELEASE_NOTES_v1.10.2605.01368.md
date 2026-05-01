@@ -14,7 +14,7 @@ This release uses the full build release number `1.10.2605.01368`. The executabl
 ## Build and platform
 
 - Platform: Windows x64
-- Source: PureBasic 6.30 project
+- Source: PureBasic 6.40 project
 - Build helper included: `build-purebasic.ps1`
 - Installer helper included: `build-installer.ps1`
 

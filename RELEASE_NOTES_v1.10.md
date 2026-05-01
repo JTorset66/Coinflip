@@ -18,7 +18,7 @@ Initial public release of Coinflip, a PureBasic x64 desktop application for larg
 ## Build and platform
 
 - Platform: Windows x64
-- Source: PureBasic 6.30 project
+- Source: PureBasic 6.40 project
 - Build helper included: `build-purebasic.ps1`
 - Installer helper included: `build-installer.ps1`
 
