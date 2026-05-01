@@ -1,7 +1,8 @@
-﻿; ================================================================================
+; ================================================================================
 ; Coin-Flip Deviation Simulator (PureBasic x64, multi-threaded, file-backed)
 ; ================================================================================
 ; Author: John Torset
+; License: MIT License. See LICENSE for the full license text.
 ;
 ; WARNING (platform/target):
 ; - This source uses x86-64 inline assembly (CPUID/XGETBV + optional AVX-512).
@@ -110,7 +111,7 @@
 ; Why this exists:
 ; - BIT-EXACT mode literally generates random bits and popcounts them. That is correct
 ;   but expensive: it must generate quadsNeeded*8 bytes of randomness per sample.
-; - You may instead sample the number of heads from an approximate Binomial(n, 0.5) 
+; - You may instead sample the number of heads from an approximate Binomial(n, 0.5)
 ;   distribution And compute |Heads - Expected|.
 ;
 ; What the approximation does (fast + stable):
@@ -128,7 +129,8 @@
 ; =============================================================================
 ; Constants
 ; =============================================================================
-#ProgramVersion$ = "V1.10"
+#AppVersion$     = "1.10.2605.01368"
+#ProgramVersion$ = "V" + #AppVersion$
 #PI_D                 = 3.1415926535897931
 
 #INSTANCES_TO_SIMULATE = 10000                     ; samples per run-block per thread
@@ -197,31 +199,24 @@ DataSection
     Data.w 63, 166, 96, 156, 44, 88, 106, 528, 104, 515, 367, 167
 EndDataSection
 
-; Minimal embedded ONNX model (Identity graph) used only for ORT self-test.
-DataSection
-  EmbeddedOrtModel:
-    Data.b 8,9,18,11,112,98,45,101,109,98,101,100,100,101,100,58
-    Data.b 55,10,16,10,1,88,18,1,89,34,8,73,100,101,110,116,105,116
-    Data.b 121,18,1,103,90,15,10,1,88,18,10,10,8,8,1,18,4,10,2,8
-    Data.b 1,98,15,10,1,89,18,10,10,8,8,1,18,4,10,2,8,1,66,2,16,13
-  EmbeddedOrtModelEnd:
-EndDataSection
-
 ; =============================================================================
 ; Layout Guide (GUI)
 ; =============================================================================
 ; Change UI sizing/spacing from ONE place by editing the constants in this section.
 ; Common tweaks:
-;   - Main window size:     #WIN_W, #WIN_H, #WIN_MIN_W, #WIN_MIN_H
+;   - Main window bootstrap: #WIN_W, #WIN_H, #WIN_MIN_W, #WIN_MIN_H
 ;   - Left panel width:     #LEFT_W (and min clamps)
 ;   - Global spacing:       #MARGIN, #PAD, #GAP_X, #GAP_Y
 ;   - Row/button sizes:     #ROW_H, #BTN_H, #SMALLBTN_H
 ;   - Plot sizing:          #PLOT_BASE_HEIGHT, #PLOT_HEIGHT_MULTIPLIER, #PLOT_MIN_HEIGHT
 ; =============================================================================
-#WIN_W         = 1600
-#WIN_H         = 980
+#WIN_W         = 1200
+#WIN_H         = 760
 #WIN_MIN_W     = 900
 #WIN_MIN_H     = 700
+#WIN_SCREEN_MARGIN = 24
+#SCROLLAREA_EDGE_PAD = 4
+#STARTUP_SCROLL_CLEARANCE = 36
 
 #MARGIN         = 14     ; outer margin to window client area
 #PAD            = 10     ; inner padding within panels (reserved)
@@ -473,13 +468,6 @@ Global poolReadyCount.i              ; number of active workers armed for the cu
 Global Dim outputDeviationWords.w(0)               ; resized at runtime from GUI
 Global outputDeviationWordsUsed.q               ; how many WORDs currently in outputDeviationWords()
 
-; Optional embedded ONNX Runtime self-test (diagnostic only).
-Global embeddedOrtLibraryHandle.i
-Global embeddedOrtSelfTestState.i             ; 0=not attempted, 1=ok, -1=failed/unavailable
-Global embeddedOrtSelfTestLogged.i
-Global embeddedOrtSelfTestSummary.s
-
-
 ; =============================================================================
 ; Fatal error helper: keeps console open even on ERROR exits
 ; =============================================================================
@@ -491,273 +479,6 @@ Procedure FatalError(message.s)
   ; Post custom event to wake the UI loop immediately.
   ; Signature: PostEvent(Event, Window, Object, EventType, EventData)
   PostEvent(#EventFatal, #WinMain, 0, 0, 0)
-EndProcedure
-
-Structure OrtApiBase_Embedded
-  *GetApi
-  *GetVersionString
-EndStructure
-
-; Partial prefix of OrtApi, only as far as the one-time self-test needs.
-Structure OrtApi_Min_Embedded
-  *CreateStatus
-  *GetErrorCode
-  *GetErrorMessage
-  *CreateEnv
-  *CreateEnvWithCustomLogger
-  *EnableTelemetryEvents
-  *DisableTelemetryEvents
-  *CreateSession
-  *CreateSessionFromArray
-  *Run
-  *CreateSessionOptions
-  *SetOptimizedModelFilePath
-  *CloneSessionOptions
-  *SetSessionExecutionMode
-  *EnableProfiling
-  *DisableProfiling
-  *EnableMemPattern
-  *DisableMemPattern
-  *EnableCpuMemArena
-  *DisableCpuMemArena
-  *SetSessionLogId
-  *SetSessionLogVerbosityLevel
-  *SetSessionLogSeverityLevel
-  *SetSessionGraphOptimizationLevel
-  *SetIntraOpNumThreads
-  *SetInterOpNumThreads
-  *CreateCustomOpDomain
-  *CustomOpDomain_Add
-  *AddCustomOpDomain
-  *RegisterCustomOpsLibrary
-  *SessionGetInputCount
-  *SessionGetOutputCount
-EndStructure
-
-Prototype.i ProtoOrtGetApiBase_Embedded()
-Prototype.i ProtoOrtBaseGetApi_Embedded(version.l)
-Prototype.i ProtoOrtBaseGetVersionString_Embedded()
-Prototype.i ProtoOrtCreateEnv_Embedded(logLevel.l, logId.p-ascii, *outEnv)
-Prototype.i ProtoOrtCreateSessionOptions_Embedded(*outOptions)
-Prototype.i ProtoOrtCreateSessionFromArray_Embedded(*env, *modelData, modelDataLength.i, *options, *outSession)
-Prototype.i ProtoOrtSessionGetInputCount_Embedded(*session, *outCount)
-Prototype.i ProtoOrtSessionGetOutputCount_Embedded(*session, *outCount)
-Prototype.i ProtoOrtGetErrorMessage_Embedded(*status)
-Prototype ProtoOrtRelease_Embedded(*obj)
-
-Procedure.s PeekAsciiZ_EmbeddedOrt(*p)
-  If *p = 0
-    ProcedureReturn ""
-  EndIf
-  ProcedureReturn PeekS(*p, -1, #PB_Ascii)
-EndProcedure
-
-Procedure.s EmbeddedOrtStatusMessage(*api.OrtApi_Min_Embedded, *status)
-  Protected GetErrorMessage.ProtoOrtGetErrorMessage_Embedded
-  Protected msg.s
-
-  If *status = 0
-    ProcedureReturn ""
-  EndIf
-
-  If *api
-    GetErrorMessage = *api\GetErrorMessage
-    If GetErrorMessage
-      msg = PeekAsciiZ_EmbeddedOrt(GetErrorMessage(*status))
-    EndIf
-  EndIf
-
-  If msg = ""
-    msg = "(no error message available)"
-  EndIf
-
-  ProcedureReturn msg
-EndProcedure
-
-Procedure.i EnsureEmbeddedOrtSelfTest()
-  Shared embeddedOrtLibraryHandle.i, embeddedOrtSelfTestState.i, embeddedOrtSelfTestSummary.s
-
-  Protected lib.i
-  Protected openedHere.i
-  Protected apiVersion.i
-  Protected inputCount.i
-  Protected outputCount.i
-  Protected modelBytes.i
-  Protected runtimeVersion.s
-  Protected statusText.s
-  Protected canClose.i
-  Protected *base.OrtApiBase_Embedded
-  Protected *api.OrtApi_Min_Embedded
-  Protected *env
-  Protected *sessionOptions
-  Protected *session
-  Protected *status
-  Protected *modelData
-  Protected OrtGetApiBase.ProtoOrtGetApiBase_Embedded
-  Protected GetApi.ProtoOrtBaseGetApi_Embedded
-  Protected GetVersionString.ProtoOrtBaseGetVersionString_Embedded
-  Protected CreateEnv.ProtoOrtCreateEnv_Embedded
-  Protected CreateSessionOptions.ProtoOrtCreateSessionOptions_Embedded
-  Protected CreateSessionFromArray.ProtoOrtCreateSessionFromArray_Embedded
-  Protected SessionGetInputCount.ProtoOrtSessionGetInputCount_Embedded
-  Protected SessionGetOutputCount.ProtoOrtSessionGetOutputCount_Embedded
-  Protected ReleaseStatus.ProtoOrtRelease_Embedded
-  Protected ReleaseEnv.ProtoOrtRelease_Embedded
-  Protected ReleaseSessionOptions.ProtoOrtRelease_Embedded
-  Protected ReleaseSession.ProtoOrtRelease_Embedded
-
-  If embeddedOrtSelfTestState <> 0
-    ProcedureReturn Bool(embeddedOrtSelfTestState > 0)
-  EndIf
-
-  lib = embeddedOrtLibraryHandle
-  If lib = 0
-    lib = OpenLibrary(#PB_Any, "onnxruntime.dll")
-    If lib = 0
-      embeddedOrtSelfTestSummary = "Embedded ONNX self-test unavailable (onnxruntime.dll not found)."
-      embeddedOrtSelfTestState = -1
-      ProcedureReturn #False
-    EndIf
-    openedHere = #True
-    embeddedOrtLibraryHandle = lib
-  EndIf
-
-  OrtGetApiBase = GetFunction(lib, "OrtGetApiBase")
-  If OrtGetApiBase = 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test unavailable (OrtGetApiBase export not found)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *base = OrtGetApiBase()
-  If *base = 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed (OrtGetApiBase returned NULL)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  GetApi = *base\GetApi
-  GetVersionString = *base\GetVersionString
-  If GetApi = 0 Or GetVersionString = 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test unavailable (OrtApiBase missing required methods)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  runtimeVersion = PeekAsciiZ_EmbeddedOrt(GetVersionString())
-  If runtimeVersion = ""
-    runtimeVersion = "unknown"
-  EndIf
-
-  For apiVersion = 25 To 1 Step -1
-    *api = GetApi(apiVersion)
-    If *api
-      Break
-    EndIf
-  Next
-
-  If *api = 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed (no supported OrtApi version found)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  CreateEnv = *api\CreateEnv
-  CreateSessionOptions = *api\CreateSessionOptions
-  CreateSessionFromArray = *api\CreateSessionFromArray
-  SessionGetInputCount = *api\SessionGetInputCount
-  SessionGetOutputCount = *api\SessionGetOutputCount
-
-  If CreateEnv = 0 Or CreateSessionOptions = 0 Or CreateSessionFromArray = 0 Or SessionGetInputCount = 0 Or SessionGetOutputCount = 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test unavailable (OrtApi is missing required functions)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  ReleaseStatus = GetFunction(lib, "OrtReleaseStatus")
-  ReleaseEnv = GetFunction(lib, "OrtReleaseEnv")
-  ReleaseSessionOptions = GetFunction(lib, "OrtReleaseSessionOptions")
-  ReleaseSession = GetFunction(lib, "OrtReleaseSession")
-
-  *modelData = ?EmbeddedOrtModel
-  modelBytes = ?EmbeddedOrtModelEnd - ?EmbeddedOrtModel
-  If modelBytes <= 0
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed (embedded model is empty)."
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *status = CreateEnv(2, "CoinflipEmbeddedORT", @*env)
-  If *status
-    statusText = EmbeddedOrtStatusMessage(*api, *status)
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed at CreateEnv: " + statusText
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *status = CreateSessionOptions(@*sessionOptions)
-  If *status
-    statusText = EmbeddedOrtStatusMessage(*api, *status)
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed at CreateSessionOptions: " + statusText
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *status = CreateSessionFromArray(*env, *modelData, modelBytes, *sessionOptions, @*session)
-  If *status
-    statusText = EmbeddedOrtStatusMessage(*api, *status)
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed at CreateSessionFromArray: " + statusText
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *status = SessionGetInputCount(*session, @inputCount)
-  If *status
-    statusText = EmbeddedOrtStatusMessage(*api, *status)
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed at SessionGetInputCount: " + statusText
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  *status = SessionGetOutputCount(*session, @outputCount)
-  If *status
-    statusText = EmbeddedOrtStatusMessage(*api, *status)
-    embeddedOrtSelfTestSummary = "Embedded ONNX self-test failed at SessionGetOutputCount: " + statusText
-    embeddedOrtSelfTestState = -1
-    Goto ort_selftest_done
-  EndIf
-
-  embeddedOrtSelfTestSummary = "Embedded ONNX self-test OK (ORT " + runtimeVersion + ", API " + Str(apiVersion) + ", " + Str(inputCount) + " in / " + Str(outputCount) + " out)."
-  embeddedOrtSelfTestState = 1
-
-ort_selftest_done:
-  ; Some ORT builds do not export the standalone release helpers. Clean up when
-  ; they exist; otherwise keep the DLL loaded for process lifetime and accept
-  ; the tiny one-time diagnostic leak.
-  If *status And ReleaseStatus
-    ReleaseStatus(*status)
-    *status = 0
-  EndIf
-  If *session And ReleaseSession
-    ReleaseSession(*session)
-    *session = 0
-  EndIf
-  If *sessionOptions And ReleaseSessionOptions
-    ReleaseSessionOptions(*sessionOptions)
-    *sessionOptions = 0
-  EndIf
-  If *env And ReleaseEnv
-    ReleaseEnv(*env)
-    *env = 0
-  EndIf
-
-  canClose = Bool(*env = 0 And *sessionOptions = 0 And *session = 0 And *status = 0)
-  If openedHere And canClose
-    CloseLibrary(lib)
-    embeddedOrtLibraryHandle = 0
-  EndIf
-
-  ProcedureReturn Bool(embeddedOrtSelfTestState > 0)
 EndProcedure
 
 
@@ -3158,6 +2879,7 @@ Global outputFilePath.s
 ; =============================================================================
 
 Enumeration Gadgets
+  #G_MainScroll
   #G_Instances
   #G_Runs
   #G_Flips
@@ -3228,6 +2950,13 @@ Global NewList threadList.i()
 #MSG_WM_NULL          = $0000
 #GWL_WNDPROC          = -4
 #TPM_RIGHTBUTTON      = $0002
+
+Structure WORKAREA_RECT
+  left.l
+  top.l
+  right.l
+  bottom.l
+EndStructure
 
 Structure LOGPOINT
   x.l
@@ -3328,6 +3057,9 @@ EndProcedure
 ; GetSystemMetrics indices (for portability)
 #SM_CXSCREEN = 0
 #SM_CYSCREEN = 1
+#SM_CXVSCROLL = 2
+#SM_CYHSCROLL = 3
+#SPI_GETWORKAREA = 48
 
 Global gScaleX.d = 1.0
 Global gScaleY.d = 1.0
@@ -3420,6 +3152,79 @@ Procedure SetMainWindowFrameSize(frameW_PB.i, frameH_PB.i)
       ; Set FRAME size exactly to frameW_PB x frameH_PB (PB units).
       SetWindowPos_(hWnd, 0, 0, 0, frameW_PB, frameH_PB, #SWP_NOMOVE | #SWP_NOZORDER | #SWP_NOACTIVATE)
     EndIf
+  CompilerEndIf
+EndProcedure
+
+Procedure SetMainWindowStartupFrame(preferredW_PB.i, preferredH_PB.i)
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    Protected hWnd.i = WindowID(#WinMain)
+    If hWnd = 0 : ProcedureReturn : EndIf
+
+    Protected work.WORKAREA_RECT
+    Protected marginX.i = PhysToPB_X(#WIN_SCREEN_MARGIN)
+    Protected marginY.i = PhysToPB_Y(#WIN_SCREEN_MARGIN)
+    Protected workW.i, workH.i, targetW.i, targetH.i, targetX.i, targetY.i
+    Protected minW.i = PhysToPB_X(#WIN_MIN_W)
+    Protected minH.i = PhysToPB_Y(#WIN_MIN_H)
+
+    If marginX < 8 : marginX = 8 : EndIf
+    If marginY < 8 : marginY = 8 : EndIf
+
+    If SystemParametersInfo_(#SPI_GETWORKAREA, 0, @work, 0)
+      workW = work\right - work\left
+      workH = work\bottom - work\top
+    Else
+      work\left = 0
+      work\top = 0
+      workW = GetSystemMetrics_(#SM_CXSCREEN)
+      workH = GetSystemMetrics_(#SM_CYSCREEN)
+    EndIf
+
+    targetW = preferredW_PB
+    targetH = preferredH_PB
+
+    If targetW > workW - (marginX * 2) : targetW = workW - (marginX * 2) : EndIf
+    If targetH > workH - (marginY * 2) : targetH = workH - (marginY * 2) : EndIf
+
+    If targetW < minW : targetW = minW : EndIf
+    If targetH < minH : targetH = minH : EndIf
+    If targetW > workW : targetW = workW : EndIf
+    If targetH > workH : targetH = workH : EndIf
+
+    targetX = work\left + (workW - targetW) / 2
+    targetY = work\top + (workH - targetH) / 2
+    If targetX < work\left : targetX = work\left : EndIf
+    If targetY < work\top : targetY = work\top : EndIf
+
+    SetWindowPos_(hWnd, 0, targetX, targetY, targetW, targetH, #SWP_NOZORDER | #SWP_NOACTIVATE)
+  CompilerElse
+    SetMainWindowFrameSize(preferredW_PB, preferredH_PB)
+  CompilerEndIf
+EndProcedure
+
+Procedure SetMainWindowStartupClient(preferredClientW_PB.i, preferredClientH_PB.i)
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    Protected hWnd.i = WindowID(#WinMain)
+    If hWnd = 0 : ProcedureReturn : EndIf
+
+    Protected client.WORKAREA_RECT
+    Protected frameW.i = WindowWidth(#WinMain, #PB_Window_FrameCoordinate)
+    Protected frameH.i = WindowHeight(#WinMain, #PB_Window_FrameCoordinate)
+    Protected clientW.i = WindowWidth(#WinMain, #PB_Window_InnerCoordinate)
+    Protected clientH.i = WindowHeight(#WinMain, #PB_Window_InnerCoordinate)
+    If GetClientRect_(hWnd, @client)
+      clientW = client\right - client\left
+      clientH = client\bottom - client\top
+    EndIf
+
+    Protected extraW.i = frameW - clientW
+    Protected extraH.i = frameH - clientH
+    If extraW < 0 : extraW = 0 : EndIf
+    If extraH < 0 : extraH = 0 : EndIf
+
+    SetMainWindowStartupFrame(preferredClientW_PB + extraW, preferredClientH_PB + extraH)
+  CompilerElse
+    SetMainWindowStartupFrame(preferredClientW_PB, preferredClientH_PB)
   CompilerEndIf
 EndProcedure
 
@@ -4313,10 +4118,6 @@ Procedure ShowHelp()
              "  2 CLT K approximation (bounded tails; fastest approximate route)" + #LF$ +
              "  3 CPython exact (BG + BTRS)" + #LF$ +
              "" + #LF$ +
-             "Optional ONNX diagnostic:" + #LF$ +
-             "  If onnxruntime.dll is available, the run log reports a one-time" + #LF$ +
-             "  embedded-model self-test. Native PB samplers still do all sampling." + #LF$ +
-             "" + #LF$ +
              "4) Throughput and Accuracy Notes" + #LF$ +
              "-------------------------------" + #LF$ +
              "- Disable Live graph for maximum speed." + #LF$ +
@@ -4383,7 +4184,6 @@ Procedure ShowAbout()
               "- Deterministic UI behavior during long-running workloads" + #LF$ +
               "- Persistent worker-pool lifecycle" + #LF$ +
               "- Buffered binary output for high throughput" + #LF$ +
-              "- Optional embedded ONNX Runtime self-test (diagnostic only)" + #LF$ +
               "- DPI-aware plotting and resizable layout" + #LF$ +
               "" + #LF$ +
               "Output Format" + #LF$ +
@@ -5125,31 +4925,14 @@ EndProcedure
 
 
 
-; ------------------------------------------------------------------------------
-; Procedure: ApplyLayout()
-; Purpose  : (see inline comments in the procedure body)
-; ------------------------------------------------------------------------------
-Procedure ApplyLayout()
-  ; Recompute all gadget rectangles based on current window size.
-  Protected winW.i = WindowWidth(#WinMain, #PB_Window_InnerCoordinate)
-  Protected winH.i = WindowHeight(#WinMain, #PB_Window_InnerCoordinate)
+Procedure.i GetMinimumContentWidth()
+  ; Minimum inner width is the real column total:
+  ; (2 * 14 margin) + 330 col1 + 320 col2 + 320 right min + (2 * 10 gaps) = 1018 PB units.
+  ProcedureReturn (#MARGIN * 2) + #COL1_W + #COL2_W + #RIGHT_MIN_W + (#GAP_X * 2)
+EndProcedure
 
-  Protected clientX.i = #MARGIN
-  Protected clientY.i = #MARGIN
-  Protected clientW.i = winW - (#MARGIN * 2)
-  Protected clientH.i = winH - (#MARGIN * 2)
-  If clientW < 1 : clientW = 1 : EndIf
-  If clientH < 1 : clientH = 1 : EndIf
-
-  ; ------------------------------------------------------------
-  ; Vertical allocation:
-  ;   Top: 3 columns (settings | policy | buttons+log)
-  ;   Bottom: plot bar (controls + status) + plot canvas
-  ; ------------------------------------------------------------
-  Protected plotBarH.i = #PLOT_BAR_H
-  If plotBarH < 0 : plotBarH = 0 : EndIf
-
-  ; Minimum content heights (approx) for each top column.
+Procedure.i GetMinimumTopHeight()
+  ; Minimum content heights for each top column.
   Protected minCol1H.i
   minCol1H = (#TITLE_H + #GAP_Y)                               ; Settings header
   minCol1H + (5 * (#ROW_H + #GAP_Y))                           ; Instances/Runs/Flips/Buffer/LocalBatch
@@ -5167,19 +4950,133 @@ Procedure ApplyLayout()
   minCol2H + (#SEP_H + #GAP_Y)                                 ; Separator
 
   Protected minCol3H.i
-  minCol3H = (#BTN_H + #GAP_Y)                                 ; Start/Stop/Reset + progress (same row)
+  minCol3H = (#BTN_H + #GAP_Y)                                 ; Start/Stop/Reset + progress
   minCol3H + (#SMALLBTN_H + #GAP_Y)                            ; Log header + buttons
   minCol3H + #LOG_MIN_H                                        ; Log editor
 
-  ; Top height must fit the tallest column (minimum).
   Protected minTopH.i = minCol1H
   If minCol2H > minTopH : minTopH = minCol2H : EndIf
   If minCol3H > minTopH : minTopH = minCol3H : EndIf
+  ProcedureReturn minTopH
+EndProcedure
+
+Procedure.i GetMinimumContentHeight()
+  Protected plotBarH.i = #PLOT_BAR_H
+  If plotBarH < 0 : plotBarH = 0 : EndIf
+
+  Protected gapsH.i = #GAP_Y + plotBarH + #GAP_Y
+  Protected minContentH.i = (#MARGIN * 2) + GetMinimumTopHeight() + gapsH + #PLOT_MIN_HEIGHT
+  If minContentH < 1 : minContentH = 1 : EndIf
+  ProcedureReturn minContentH
+EndProcedure
+
+
+
+; ------------------------------------------------------------------------------
+; Procedure: ApplyLayout()
+; Purpose  : (see inline comments in the procedure body)
+; ------------------------------------------------------------------------------
+Procedure ApplyLayout()
+  ; Recompute all gadget rectangles based on current window size.
+  Protected viewportW.i = WindowWidth(#WinMain, #PB_Window_InnerCoordinate)
+  Protected viewportH.i = WindowHeight(#WinMain, #PB_Window_InnerCoordinate)
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    ; PB's inner height includes the menu band here; Win32's client rect matches
+    ; the actual coordinate space available to child gadgets.
+    Protected winClient.WORKAREA_RECT
+    If GetClientRect_(WindowID(#WinMain), @winClient)
+      viewportW = winClient\right - winClient\left
+      viewportH = winClient\bottom - winClient\top
+    EndIf
+  CompilerEndIf
+  If viewportW < 1 : viewportW = 1 : EndIf
+  If viewportH < 1 : viewportH = 1 : EndIf
+
+  Protected oldScrollX.i = GetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_X)
+  Protected oldScrollY.i = GetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_Y)
+
+
+  ; Keep layout math in PureBasic units. The scroll area loses a few usable pixels
+  ; to its border, and scrollbars lose space only when they are actually needed.
+  Protected viewportClientW.i = viewportW - #SCROLLAREA_EDGE_PAD
+  Protected viewportClientH.i = viewportH - #SCROLLAREA_EDGE_PAD
+  If viewportClientW < 1 : viewportClientW = 1 : EndIf
+  If viewportClientH < 1 : viewportClientH = 1 : EndIf
+
+  Protected minContentW.i = GetMinimumContentWidth()
+
+  Protected clientX.i = #MARGIN
+  Protected clientY.i = #MARGIN
+
+  ; ------------------------------------------------------------
+  ; Vertical allocation:
+  ;   Top: 3 columns (settings | policy | buttons+log)
+  ;   Bottom: plot bar (controls + status) + plot canvas
+  ; ------------------------------------------------------------
+  Protected plotBarH.i = #PLOT_BAR_H
+  If plotBarH < 0 : plotBarH = 0 : EndIf
+
+  Protected minTopH.i = GetMinimumTopHeight()
 
   ; Allocate vertical space:
   ; - Top area uses its minimum required height (minTopH).
   ; - Any extra height is given to the plot canvas (reduces unused blank space).
   Protected gapsH.i = #GAP_Y + plotBarH + #GAP_Y
+  Protected minContentH.i = GetMinimumContentHeight()
+
+  Protected scrollBarW.i = 16
+  Protected scrollBarH.i = 16
+  CompilerIf #PB_Compiler_OS = #PB_OS_Windows
+    scrollBarW = GetSystemMetrics_(#SM_CXVSCROLL)
+    scrollBarH = GetSystemMetrics_(#SM_CYHSCROLL)
+  CompilerEndIf
+  If scrollBarW < 1 : scrollBarW = 16 : EndIf
+  If scrollBarH < 1 : scrollBarH = 16 : EndIf
+
+  Protected needHScroll.i = 0
+  Protected needVScroll.i = 0
+  If minContentW > viewportClientW : needHScroll = 1 : EndIf
+  If minContentH > viewportClientH : needVScroll = 1 : EndIf
+  If needVScroll And minContentW > viewportClientW - scrollBarW : needHScroll = 1 : EndIf
+  If needHScroll And minContentH > viewportClientH - scrollBarH : needVScroll = 1 : EndIf
+
+  Protected visibleContentW.i = viewportClientW
+  Protected visibleContentH.i = viewportClientH
+  If needVScroll : visibleContentW - scrollBarW : EndIf
+  If needHScroll : visibleContentH - scrollBarH : EndIf
+  If visibleContentW < 1 : visibleContentW = 1 : EndIf
+  If visibleContentH < 1 : visibleContentH = 1 : EndIf
+
+  Protected contentW.i = visibleContentW
+  If contentW < minContentW : contentW = minContentW : EndIf
+  Protected contentH.i = visibleContentH
+  If contentH < minContentH : contentH = minContentH : EndIf
+
+  Protected maxScrollX.i = contentW - visibleContentW
+  Protected maxScrollY.i = contentH - visibleContentH
+  If maxScrollX < 0 : maxScrollX = 0 : EndIf
+  If maxScrollY < 0 : maxScrollY = 0 : EndIf
+  If oldScrollX > maxScrollX : oldScrollX = maxScrollX : EndIf
+  If oldScrollY > maxScrollY : oldScrollY = maxScrollY : EndIf
+  If oldScrollX < 0 : oldScrollX = 0 : EndIf
+  If oldScrollY < 0 : oldScrollY = 0 : EndIf
+
+  ResizeGadget(#G_MainScroll, 0, 0, viewportW, viewportH)
+
+  Protected clientW.i = contentW - (#MARGIN * 2)
+  Protected clientH.i = contentH - (#MARGIN * 2)
+  If clientW < 1 : clientW = 1 : EndIf
+  If clientH < 1 : clientH = 1 : EndIf
+  clientX = #MARGIN
+  clientY = #MARGIN
+
+  ; The ScrollAreaGadget owns both native scrollbars. Keep the full inner size
+  ; here so the horizontal and vertical bars match in look and behavior.
+  SetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_InnerWidth, contentW)
+  SetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_InnerHeight, contentH)
+  SetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_X, oldScrollX)
+  SetGadgetAttribute(#G_MainScroll, #PB_ScrollArea_Y, oldScrollY)
+
   Protected availableForPlot.i = clientH - (minTopH + gapsH)
 
   Protected plotCanvasH.i
@@ -5856,13 +5753,8 @@ Procedure StartSimulation()
       Default
         LogLine("Binomial engine: Exact BTPE (Kachitvichyanukul & Schmeiser).")
     EndSelect
-    If embeddedOrtSelfTestLogged = 0
-      EnsureEmbeddedOrtSelfTest()
-      LogLine(embeddedOrtSelfTestSummary)
-      embeddedOrtSelfTestLogged = 1
-    EndIf
   EndIf
-  
+
 
   ; ---------------------------------------------------------------------------
   ; Accurate start timing (barrier):
@@ -6065,13 +5957,20 @@ Procedure BuildGUI()
   SetWindowCallback(@MainWinCB(), #WinMain)
   WindowBounds(#WinMain, PhysToPB_X(#WIN_MIN_W), PhysToPB_Y(#WIN_MIN_H), #PB_Ignore, #PB_Ignore)
 
-  ; Ensure the outer (frame) size matches #WIN_W x #WIN_H exactly.
-  SetMainWindowFrameSize(winW_PB, winH_PB)
+  ; Open just large enough for the minimum inner content. If the screen/work area
+  ; is smaller, startup clamps and native scrollbars appear.
+  Protected startupClientW_PB.i = GetMinimumContentWidth() + #SCROLLAREA_EDGE_PAD + #STARTUP_SCROLL_CLEARANCE
+  Protected startupClientH_PB.i = GetMinimumContentHeight() + #SCROLLAREA_EDGE_PAD + #STARTUP_SCROLL_CLEARANCE
+  SetMainWindowStartupClient(startupClientW_PB, startupClientH_PB)
   UpdateMainWindowTitle()
   BuildMenuBar()
   BuildPopupMenus()
 
   ; Create gadgets (positions will be set by ApplyLayout()).
+  Protected initialInnerW_PB.i = (#MARGIN * 2) + #COL1_W + #COL2_W + #RIGHT_MIN_W + (#GAP_X * 2)
+  Protected initialInnerH_PB.i = winH_PB
+  ScrollAreaGadget(#G_MainScroll, 0, 0, 1, 1, initialInnerW_PB, initialInnerH_PB, 16)
+
   ButtonGadget(#G_Start, 0, 0, 1, 1, "Start")
   ButtonGadget(#G_Stop,  0, 0, 1, 1, "Stop")
   ButtonGadget(#G_Reset, 0, 0, 1, 1, "Reset")
@@ -6179,6 +6078,8 @@ Procedure BuildGUI()
 
   ; Plot
   CanvasGadget(#G_PlotCanvas, 0, 0, 1, 1)
+
+  CloseGadgetList()
 
   ; Timers / UI rules
   AddWindowTimer(#WinMain, #TIMER_UI, #TIMER_UI_MS)

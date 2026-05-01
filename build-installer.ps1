@@ -5,6 +5,17 @@ param(
 
 $ErrorActionPreference = "Stop"
 
+function Write-BuildInfo {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Label,
+        [Parameter(Mandatory = $true)]
+        [string]$Value
+    )
+
+    Write-Host ("  {0,-16} {1}" -f ($Label + ":"), $Value)
+}
+
 function Resolve-IsccPath {
     $iscc = Get-Command iscc -ErrorAction SilentlyContinue
     if (-not $iscc) {
@@ -90,7 +101,7 @@ function Sign-ProjectArtifact {
         throw "Signing failed for $Path`: $($signature.Status) - $($signature.StatusMessage)"
     }
 
-    Write-Host "Signed:" $Path
+    Write-BuildInfo "Signed" $Path
 }
 
 function Get-ArtifactInfo {
@@ -116,15 +127,48 @@ function Get-ArtifactInfo {
 
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
+function Sync-InnoAppVersion {
+    $sourcePath = Join-Path $repoRoot "Coinflip_V1.10.pb"
+    $installerPath = Join-Path $repoRoot "coinflip.iss"
+    $sourceText = Get-Content -LiteralPath $sourcePath -Raw
+
+    if ($sourceText -notmatch '(?m)^#AppVersion\$\s*=\s*"([^"]+)"') {
+        throw "Could not read #AppVersion$ from $sourcePath."
+    }
+
+    $appVersion = $Matches[1]
+    $installerText = Get-Content -LiteralPath $installerPath -Raw
+    $updatedInstallerText = [regex]::Replace(
+        $installerText,
+        '(?m)^#define AppVersion "[^"]+"',
+        '#define AppVersion "' + $appVersion + '"',
+        1
+    )
+
+    Set-Content -LiteralPath $installerPath -Value $updatedInstallerText -NoNewline
+    Write-BuildInfo "Installer version" $appVersion
+}
 Push-Location $repoRoot
 try {
+    Write-Host ""
+    Write-Host "Coinflip installer build"
+    Write-BuildInfo "Repository" $repoRoot
+
     .\build-purebasic.ps1 -CertificateThumbprint $CertificateThumbprint -TimestampUrl $TimestampUrl
 
+    Write-Host ""
+    Write-Host "Installer package"
+    Sync-InnoAppVersion
+
     $isccPath = Resolve-IsccPath
-    $isccArgs = @(".\coinflip.iss")
+    $isccArgs = @("/Q", ".\coinflip.iss")
+    Write-BuildInfo "Inno compiler" $isccPath
+    Write-BuildInfo "Compiler mode" "Quiet"
+    Write-BuildInfo "Script" (Join-Path $repoRoot "coinflip.iss")
+
     if (Test-Path (Join-Path $repoRoot "Noto_Emoji_Coin.ico")) {
         $isccArgs += "/DHasAppIcon=1"
-        Write-Host "Using installer icon: Noto_Emoji_Coin.ico"
+        Write-BuildInfo "Installer icon" (Join-Path $repoRoot "Noto_Emoji_Coin.ico")
     }
     else {
         Write-Warning "Installer icon was referenced but not found: Noto_Emoji_Coin.ico"
@@ -140,18 +184,25 @@ try {
     if ($CertificateThumbprint) {
         $certificate = Get-CodeSigningCertificate -Thumbprint $CertificateThumbprint
         Sign-ProjectArtifact -Path $setupPath -Certificate $certificate -TimestampServer $TimestampUrl
-        Write-Host "Installer signer:" $certificate.Subject
+        Write-BuildInfo "Installer signer" $certificate.Subject
     }
 
+    Write-Host ""
+    Write-Host "Build artifacts"
     foreach ($artifactPath in @(
         (Join-Path $repoRoot "build\Coinflip_V1.10.exe"),
         $setupPath
     )) {
         $info = Get-ArtifactInfo -Path $artifactPath
-        Write-Host ("{0} SHA-256: {1}" -f $info.Name, $info.Sha256)
+        Write-Host ("  {0}" -f $info.Name)
+        Write-Host ("    Path:   {0}" -f $info.FullName)
+        Write-Host ("    Size:   {0:N0} bytes" -f $info.Length)
+        Write-Host ("    SHA256: {0}" -f $info.Sha256)
     }
 
-    Write-Host "Installer built in build\"
+    Write-Host ""
+    Write-Host "Installer build complete."
+    Write-BuildInfo "Output" $setupPath
 }
 finally {
     Pop-Location

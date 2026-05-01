@@ -1,0 +1,11 @@
+{
+  "folders": [
+    {
+      "name": "Coinflip",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "window.title": "Coinflip - ${activeEditorShort}${separator}${rootName}"
+  }
+}

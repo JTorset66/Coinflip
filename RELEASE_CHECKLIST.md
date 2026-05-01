@@ -7,7 +7,10 @@ Use this checklist for public Coinflip releases.
 - Confirm the intended version number in `Coinflip_V1.10.pb`.
 - Confirm the intended version number and artifact names in `coinflip.iss`.
 - Review `README.md` for any release notes, usage notes, or dependency changes.
+- Review `INSTALLER_README.md` for user-facing app functionality and usage changes.
 - Confirm `THIRD_PARTY_NOTICES.md` is included with the installer and still matches the application icon.
+- Confirm the installer includes `INSTALLER_README.md` as installed `README.md`.
+- Confirm the installer creates a desktop shortcut and does not create Start Menu shortcuts.
 - Confirm the project still matches the statements in `CODE_SIGNING_POLICY.md`.
 - Build locally with:
 
@@ -20,6 +23,9 @@ Use this checklist for public Coinflip releases.
 - If signing is available, sign and verify the executable and installer before release.
 - Test-launch the built executable on Windows.
 - Test-install the built installer on Windows.
+- Confirm the installer "Read Included Files" page opens the README, license, and third-party notices.
+- Confirm the installed desktop shortcut launches Coinflip.
+- Confirm no Coinflip Start Menu shortcut is created.
 - Confirm the installed maintenance entry offers Repair install and Uninstall.
 - Confirm GitHub MFA is enabled for the maintainer account.
 

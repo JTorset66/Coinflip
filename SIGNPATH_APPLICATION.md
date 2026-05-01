@@ -8,18 +8,19 @@ This document collects the information needed to apply for a free SignPath.io su
 - Project handle: coinflip
 - Repository: <https://github.com/JTorset66/Coinflip>
 - Latest public release: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10>
-- License: GPL-3.0
+- License: MIT
 - Maintainer: John Torset
 - Primary platform: Windows x64
-- Project description: PureBasic desktop application for large-scale fair-coin simulation, deviation analysis, and high-throughput benchmarking
+- Project description: PureBasic desktop application for high-volume fair-coin simulation, deviation analysis, live plotting, and optional raw deviation output
 
 ## Why this project fits the program
 
 - The repository is public.
-- The project uses an OSI-approved open-source license.
+- The project source uses the OSI-approved MIT License.
 - The published release artifacts are built from the repository source.
 - The repository includes a public code signing policy and privacy statement.
-- The application icon credit is documented in `THIRD_PARTY_NOTICES.md`.
+- The application icon credit and Apache License 2.0 attribution are documented in `THIRD_PARTY_NOTICES.md`.
+- The installer includes a user-focused `INSTALLER_README.md`, the MIT license, and third-party notices.
 - The application does not include network telemetry or data transfer unless explicitly requested by the user or operator.
 - The project is a user-facing Windows desktop application where trusted code signing materially improves install and run experience.
 
@@ -40,7 +41,7 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ### License and source availability
 
-- All repository content intended for release is open source under GPL-3.0.
+- All repository content intended for release is open source under the MIT License, with the bundled Noto Emoji icon documented separately under Apache License 2.0.
 - There is no commercial dual-licensing statement in the repository.
 - The project does not intentionally bundle proprietary maintainer-owned components.
 - The bundled application icon is from Google Noto Emoji and is documented as Apache License 2.0.
@@ -48,13 +49,13 @@ This document collects the information needed to apply for a free SignPath.io su
 ### Released and documented
 
 - Version `v1.10` is publicly released on GitHub with binaries and checksum files.
-- The repository README describes the software, build requirements, installer behavior, runtime notes, and usage.
-- The repository includes third-party icon attribution and license details.
+- The repository README describes the project, build requirements, installer behavior, runtime notes, and usage.
+- `INSTALLER_README.md` is the user-facing README bundled into the installer and focuses on Coinflip functionality rather than build/release details.
+- The repository includes third-party icon attribution and Apache License 2.0 details.
 
 ### Privacy and user safety
 
 - The project states: "This program does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it."
-- The optional ONNX Runtime self-test is local to the machine and does not require network access.
 - The project is not a hacking tool and does not include features intended to bypass platform security controls.
 
 ### Roles and approvals
@@ -66,6 +67,7 @@ This document collects the information needed to apply for a free SignPath.io su
 
 - The repository includes a self-hosted Windows GitHub Actions workflow for executable and installer release builds.
 - The release process is documented in `RELEASE_CHECKLIST.md`.
+- The installer creates a desktop shortcut, does not create Start Menu shortcuts, and includes buttons for reading the bundled README, license, and third-party notices before installation.
 - The repository includes a code signing policy that uses the required SignPath Foundation wording.
 
 ## Honest caveats to mention if asked
@@ -78,7 +80,7 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ### Short project description
 
-Coinflip is a Windows x64 PureBasic desktop application for large-scale fair-coin simulation and deviation analysis. It supports exact bit-level simulation, multiple binomial sampling paths, multithreaded execution, live plotting, optional binary output for later analysis, and a standard Windows installer.
+Coinflip is a Windows x64 PureBasic desktop application for high-volume fair-coin simulation and deviation analysis. It supports exact bit-level simulation, multiple binomial sampling paths, multithreaded execution, live plotting, optional raw deviation output for later analysis, and a Windows installer with bundled user documentation.
 
 ### Why code signing is needed
 

@@ -37,19 +37,19 @@ Only binaries built from this repository and maintained by this project may be s
 - Third-party upstream executables and DLLs must not be re-signed as if they were project binaries.
 - If signing is enabled for a release build, the signed artifacts must come from the automated release workflow or an equivalent controlled maintainer-run process.
 - The installer must contain only project release files and documented dependencies.
+- The installer must include the user README, license, and third-party notices shipped with the release.
 - Every signing event must correspond to a release the project intends to publish.
 
 ## Privacy policy
 
 This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
 
-The application can optionally perform a local self-test against `onnxruntime.dll` when that DLL is present on the same system. This behavior is local to the machine and does not require network access.
-
 ## User safety
 
 - The project must not include malware, potentially unwanted software, or features intended to bypass platform security controls.
 - System changes must be transparent to the user.
 - The installer must provide clear uninstall support.
+- The installer must not create startup entries, background tray behavior, or Start Menu shortcuts unless the documentation and release checklist are updated first.
 
 ## Repository security expectations
 
