@@ -7,7 +7,7 @@ Information for applying for a free SignPath.io subscription through SignPath Fo
 - Project name: Coinflip
 - Project handle: coinflip
 - Repository: <https://github.com/JTorset66/Coinflip>
-- Latest public release: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10.2605.01368>
+- Latest public release: <https://github.com/JTorset66/Coinflip/releases/tag/v1.12.2605.14177>
 - License: MIT
 - Maintainer: John Torset
 - Primary platform: Windows x64
@@ -20,21 +20,21 @@ Information for applying for a free SignPath.io subscription through SignPath Fo
 - The published release artifacts are built from the repository source.
 - The repository includes a public code signing policy and privacy statement.
 - The application icon credit and Apache License 2.0 attribution are documented in `THIRD_PARTY_NOTICES.md`.
-- The installer includes a user-focused `INSTALLER_README.md`, the MIT license, and third-party notices.
+- The installer includes readable `.txt` copies of the user README, user manual, MIT license, and third-party notices.
 - The application does not include network telemetry or data transfer unless explicitly requested by the user or operator.
 - The project is a user-facing Windows desktop application where trusted code signing materially improves install and run experience.
 
 ## Public links
 
 - Repository home: <https://github.com/JTorset66/Coinflip>
-- Release page: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10.2605.01368>
+- Release page: <https://github.com/JTorset66/Coinflip/releases/tag/v1.12.2605.14177>
 - Code signing policy: <https://github.com/JTorset66/Coinflip/blob/main/CODE_SIGNING_POLICY.md>
 - Release checklist: <https://github.com/JTorset66/Coinflip/blob/main/RELEASE_CHECKLIST.md>
 
 ## Expected release artifacts
 
-- `Coinflip_V1.10.YYMM.minute-of-month.exe`
-- `Coinflip_V1.10.YYMM.minute-of-month_Setup.exe`
+- `Coinflip_V1.12.YYMM.minute-of-month.exe`
+- `Coinflip_V1.12.YYMM.minute-of-month_Setup.exe`
 - SHA-256 checksum files for published executables
 
 ## Compliance notes against SignPath Foundation terms
@@ -48,9 +48,9 @@ Information for applying for a free SignPath.io subscription through SignPath Fo
 
 ### Released and documented
 
-- Release `v1.10.2605.01368` is publicly released on GitHub with binaries and checksum files.
+- Release `v1.12.2605.14177` is publicly released on GitHub with binaries and checksum files.
 - The repository README describes the project, build requirements, installer behavior, runtime notes, and usage.
-- `INSTALLER_README.md` is the user-facing README bundled into the installer and focuses on Coinflip functionality rather than build/release details.
+- `INSTALLER_README.md` is converted to installed `README.txt`, and `USER_MANUAL.txt` is bundled as the full operating manual.
 - The repository includes third-party icon attribution and Apache License 2.0 details.
 
 ### Privacy and user safety
@@ -67,7 +67,7 @@ Information for applying for a free SignPath.io subscription through SignPath Fo
 
 - The repository includes a self-hosted Windows GitHub Actions workflow for executable and installer release builds.
 - The release process is documented in `RELEASE_CHECKLIST.md`.
-- The installer creates a desktop shortcut, does not create Start Menu shortcuts, and includes buttons for reading the bundled README, license, and third-party notices before installation.
+- The installer creates a desktop shortcut, does not create Start Menu shortcuts, and includes buttons for reading the bundled README, user manual, license, and third-party notices before installation.
 - The repository includes a code signing policy that uses the required SignPath Foundation wording.
 
 ## Honest caveats to mention if asked
