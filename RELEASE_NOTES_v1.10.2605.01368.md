@@ -8,7 +8,7 @@ Release number: `1.10.2605.01368`. The executable and installer artifact names r
 
 - Public release documentation refreshed for the second GitHub release.
 - Repository README cleaned up to match the current tracked file set.
-- SignPath application notes updated to point at the current public release.
+- SignPath application notes updated to point at the then-current public release.
 - The Windows installer, desktop shortcut behavior, bundled README, license, and third-party notices remain part of the release package.
 
 ## Build and platform

@@ -191,7 +191,7 @@ Windows Smart App Control requires an RSA-based code-signing certificate from a 
 
 Tagged releases and release artifact filenames should use the full stamped version number, for example `v1.12.2605.01042`.
 
-Current changelog and release notes:
+Latest and recent changelog and release notes:
 
 - [`RELEASE_NOTES_v1.12.2605.14177.md`](RELEASE_NOTES_v1.12.2605.14177.md)
 - [`RELEASE_NOTES_v1.10.2605.14030.md`](RELEASE_NOTES_v1.10.2605.14030.md)
@@ -262,6 +262,7 @@ USER_MANUAL.txt
 THIRD_PARTY_NOTICES.md
 CODE_SIGNING_POLICY.md
 RELEASE_CHECKLIST.md
+RELEASE_NOTES_v1.12.2605.14177.md
 RELEASE_NOTES_v1.10.2605.14030.md
 RELEASE_NOTES_v1.10.2605.13986.md
 RELEASE_NOTES_v1.10.2605.13972.md

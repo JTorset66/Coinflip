@@ -1,6 +1,6 @@
 # Coinflip v1.10.2605.13972
 
-Repository changelog for the current Coinflip V1.10 build.
+Repository changelog for a Coinflip V1.10 build.
 
 Release number: `1.10.2605.13972`. Generated executable and installer names use the full stamped version in the existing `Coinflip_V1.10...` naming family.
 
