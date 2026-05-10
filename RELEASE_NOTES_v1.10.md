@@ -24,7 +24,7 @@ Initial public release of Coinflip, a PureBasic x64 desktop application for larg
 
 ## Notes
 
-- This is the first public release of the project.
+- First public release of the project.
 - Release binaries may be unsigned until the project finishes trusted code-signing onboarding.
 
 ## Included assets

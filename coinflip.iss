@@ -1,7 +1,7 @@
 #define AppName "Coinflip"
-#define AppVersion "1.10.2605.01368"
-#define AppExeName "Coinflip_V1.10.exe"
-#define AppSetupName "Coinflip_V1.10_Setup.exe"
+#define AppVersion "1.12.2605.14177"
+#define AppExeName "Coinflip_V1.12.2605.14177.exe"
+#define AppSetupName "Coinflip_V1.12.2605.14177_Setup.exe"
 #define AppPublisher "John Torset"
 #define AppURL "https://github.com/JTorset66/Coinflip"
 #define AppIconName "Noto_Emoji_Coin.ico"
@@ -21,7 +21,7 @@ AppVerName={#AppName} {#AppVersion}
 DefaultDirName={autopf}\{#AppName}
 DisableProgramGroupPage=yes
 OutputDir=build
-OutputBaseFilename=Coinflip_V1.10_Setup
+OutputBaseFilename=Coinflip_V1.12.2605.14177_Setup
 Compression=lzma2
 SolidCompression=yes
 WizardStyle=modern
@@ -59,8 +59,8 @@ SelectDirDesc=Choose the installation folder.
 SelectDirLabel3=Setup will install Coinflip into the following folder.
 SelectDirBrowseLabel=Click Next to continue, or Browse to choose a different folder.
 ReadyLabel1=Setup is ready to install Coinflip.
-ReadyLabel2a=Coinflip is a Windows x64 fair-coin simulation and deviation analysis tool. It runs high-volume coin-flip experiments, measures how far each sample deviates from the expected 50/50 result, and plots live or loaded data against a bell curve.%n%nSetup will install Coinflip, create a desktop shortcut, and include the user README, license, and third-party notices.%n%nClick Install to continue, or Back to review or change any settings.
-ReadyLabel2b=Coinflip is a Windows x64 fair-coin simulation and deviation analysis tool. It runs high-volume coin-flip experiments, measures how far each sample deviates from the expected 50/50 result, and plots live or loaded data against a bell curve.%n%nSetup will install Coinflip, create a desktop shortcut, and include the user README, license, and third-party notices.%n%nClick Install to continue.
+ReadyLabel2a=Coinflip is a Windows x64 fair-coin simulation and deviation analysis tool. It runs high-volume coin-flip experiments, measures how far each sample deviates from the expected 50/50 result, and plots live or loaded data against a bell curve.%n%nSetup will install Coinflip, create a desktop shortcut, and include the user README, full user manual, license, and third-party notices.%n%nClick Install to continue, or Back to review or change any settings.
+ReadyLabel2b=Coinflip is a Windows x64 fair-coin simulation and deviation analysis tool. It runs high-volume coin-flip experiments, measures how far each sample deviates from the expected 50/50 result, and plots live or loaded data against a bell curve.%n%nSetup will install Coinflip, create a desktop shortcut, and include the user README, full user manual, license, and third-party notices.%n%nClick Install to continue.
 InstallingLabel=Please wait while Setup installs Coinflip and creates the desktop shortcut.
 FinishedHeadingLabel=Completing Coinflip Setup
 FinishedLabelNoIcons=Coinflip has been installed.
@@ -73,12 +73,20 @@ UninstalledMost=%1 uninstall complete.%n%nSome files could not be removed and ma
 [Files]
 Source: "build\{#AppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "{#AppIconName}"; DestDir: "{app}"; Flags: ignoreversion skipifsourcedoesntexist
-Source: "INSTALLER_README.md"; DestDir: "{app}"; DestName: "README.md"; Flags: ignoreversion
-Source: "THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; Flags: ignoreversion
-Source: "LICENSE"; DestDir: "{app}"; Flags: ignoreversion
-Source: "INSTALLER_README.md"; DestName: "Coinflip_README.md"; Flags: dontcopy
-Source: "THIRD_PARTY_NOTICES.md"; DestName: "Coinflip_THIRD_PARTY_NOTICES.md"; Flags: dontcopy
+Source: "INSTALLER_README.md"; DestDir: "{app}"; DestName: "README.txt"; Flags: ignoreversion
+Source: "USER_MANUAL.txt"; DestDir: "{app}"; Flags: ignoreversion
+Source: "THIRD_PARTY_NOTICES.md"; DestDir: "{app}"; DestName: "THIRD_PARTY_NOTICES.txt"; Flags: ignoreversion
+Source: "LICENSE"; DestDir: "{app}"; DestName: "LICENSE.txt"; Flags: ignoreversion
+Source: "INSTALLER_README.md"; DestName: "Coinflip_README.txt"; Flags: dontcopy
+Source: "USER_MANUAL.txt"; DestName: "Coinflip_USER_MANUAL.txt"; Flags: dontcopy
+Source: "THIRD_PARTY_NOTICES.md"; DestName: "Coinflip_THIRD_PARTY_NOTICES.txt"; Flags: dontcopy
 Source: "LICENSE"; DestName: "Coinflip_LICENSE.txt"; Flags: dontcopy
+
+[InstallDelete]
+Type: files; Name: "{app}\README.md"
+Type: files; Name: "{app}\USER_MANUAL.md"
+Type: files; Name: "{app}\THIRD_PARTY_NOTICES.md"
+Type: files; Name: "{app}\LICENSE"
 
 [Icons]
 Name: "{commondesktop}\{#AppName}"; Filename: "{app}\{#AppExeName}"; WorkingDir: "{app}"; IconFilename: "{app}\{#AppIconName}"; Check: IconFileExists
@@ -190,13 +198,18 @@ begin
   ExtractTemporaryFile(FileName);
   TempPath := ExpandConstant('{tmp}\' + FileName);
 
-  if not Exec(ExpandConstant('{sys}\notepad.exe'), QuoteValue(TempPath), '', SW_SHOWNORMAL, ewNoWait, ResultCode) then
+  if not ShellExec('', TempPath, '', '', SW_SHOWNORMAL, ewNoWait, ResultCode) then
     MsgBox('Coinflip Setup could not open ' + FileName + '.', mbError, MB_OK);
 end;
 
 procedure ReadmeButtonClick(Sender: TObject);
 begin
-  OpenIncludedTextFile('Coinflip_README.md');
+  OpenIncludedTextFile('Coinflip_README.txt');
+end;
+
+procedure UserManualButtonClick(Sender: TObject);
+begin
+  OpenIncludedTextFile('Coinflip_USER_MANUAL.txt');
 end;
 
 procedure LicenseButtonClick(Sender: TObject);
@@ -206,7 +219,7 @@ end;
 
 procedure ThirdPartyButtonClick(Sender: TObject);
 begin
-  OpenIncludedTextFile('Coinflip_THIRD_PARTY_NOTICES.md');
+  OpenIncludedTextFile('Coinflip_THIRD_PARTY_NOTICES.txt');
 end;
 
 procedure CreateIncludedFileButton(const Caption: string; Top: Integer; OnClick: TNotifyEvent);
@@ -243,13 +256,14 @@ begin
   BodyText.Height := ScaleY(60);
   BodyText.WordWrap := True;
   BodyText.Caption :=
-    'Coinflip Setup includes a user README, license, and third-party notices. ' +
+    'Coinflip Setup includes a user README, full user manual, license, and third-party notices. ' +
     'Use these buttons to read them now; the same files will also be installed with Coinflip.';
 
   ButtonTop := BodyText.Top + BodyText.Height + ScaleY(18);
   CreateIncludedFileButton('Read README', ButtonTop, @ReadmeButtonClick);
-  CreateIncludedFileButton('Read License', ButtonTop + ScaleY(36), @LicenseButtonClick);
-  CreateIncludedFileButton('Read Third-Party Notices', ButtonTop + ScaleY(72), @ThirdPartyButtonClick);
+  CreateIncludedFileButton('Read User Manual', ButtonTop + ScaleY(36), @UserManualButtonClick);
+  CreateIncludedFileButton('Read License', ButtonTop + ScaleY(72), @LicenseButtonClick);
+  CreateIncludedFileButton('Read Third-Party Notices', ButtonTop + ScaleY(108), @ThirdPartyButtonClick);
 end;
 
 function InitializeSetup(): Boolean;

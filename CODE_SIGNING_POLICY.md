@@ -1,12 +1,12 @@
 # Code Signing Policy
 
-This document describes how release binaries for Coinflip are built, reviewed, and signed.
+Policy for building, reviewing, and signing Coinflip release binaries.
 
 Free code signing provided by [SignPath.io](https://about.signpath.io), certificate by [SignPath Foundation](https://signpath.org).
 
-Current status:
+Status:
 
-- This repository is preparing for a SignPath Foundation application.
+- Preparing for a SignPath Foundation application.
 - Until that application is approved and integrated, published binaries may be unsigned or signed through a separate trusted Windows code-signing setup controlled by the project maintainer.
 
 ## Project roles
@@ -14,20 +14,20 @@ Current status:
 - Committer and reviewer: John Torset
 - Approver for release signing: John Torset
 
-If the project team expands, this policy will be updated to reflect the active maintainers and approvers.
+If the project team expands, update this policy to reflect the active maintainers and approvers.
 
 ## Source of truth
 
 - Primary repository: <https://github.com/JTorset66/Coinflip>
 - Default branch: `main`
 
-Only binaries built from this repository and maintained by this project may be signed under this policy.
+Only binaries built from this repository and maintained by the project may be signed under this policy.
 
 ## Release build policy
 
 - Release artifacts must be built from source in this repository.
-- Builds should be produced by an automated workflow on a controlled Windows runner with PureBasic and Inno Setup installed.
-- Release tags should use the format `v*`.
+- Prefer automated workflow builds on a controlled Windows runner with PureBasic and Inno Setup installed.
+- Release tags use the format `v*`.
 - The produced executable and installer names must match the project version embedded in the source and build output.
 - Build scripts, installer scripts, and workflow definitions are part of the trusted source and must be reviewed with the same care as application code.
 
@@ -42,7 +42,7 @@ Only binaries built from this repository and maintained by this project may be s
 
 ## Privacy policy
 
-This program will not transfer any information to other networked systems unless specifically requested by the user or the person installing or operating it.
+Coinflip does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it.
 
 ## User safety
 
@@ -53,5 +53,5 @@ This program will not transfer any information to other networked systems unless
 
 ## Repository security expectations
 
-- Maintainers involved in releases should use multi-factor authentication for GitHub and any signing platform.
-- Release approvals should only be given for reviewed code that matches the intended tagged source revision.
+- Maintainers involved in releases use multi-factor authentication for GitHub and any signing platform.
+- Release approvals apply only to reviewed code that matches the intended tagged source revision.

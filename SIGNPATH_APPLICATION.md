@@ -1,6 +1,6 @@
 # SignPath Foundation Application Draft
 
-This document collects the information needed to apply for a free SignPath.io subscription through SignPath Foundation.
+Information for applying for a free SignPath.io subscription through SignPath Foundation.
 
 ## Project summary
 
@@ -13,7 +13,7 @@ This document collects the information needed to apply for a free SignPath.io su
 - Primary platform: Windows x64
 - Project description: PureBasic desktop application for high-volume fair-coin simulation, deviation analysis, live plotting, and optional raw deviation output
 
-## Why this project fits the program
+## Program fit
 
 - The repository is public.
 - The project source uses the OSI-approved MIT License.
@@ -24,7 +24,7 @@ This document collects the information needed to apply for a free SignPath.io su
 - The application does not include network telemetry or data transfer unless explicitly requested by the user or operator.
 - The project is a user-facing Windows desktop application where trusted code signing materially improves install and run experience.
 
-## Current public links
+## Public links
 
 - Repository home: <https://github.com/JTorset66/Coinflip>
 - Release page: <https://github.com/JTorset66/Coinflip/releases/tag/v1.10.2605.01368>
@@ -33,8 +33,8 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ## Expected release artifacts
 
-- `Coinflip_V1.10.exe`
-- `Coinflip_V1.10_Setup.exe`
+- `Coinflip_V1.10.YYMM.minute-of-month.exe`
+- `Coinflip_V1.10.YYMM.minute-of-month_Setup.exe`
 - SHA-256 checksum files for published executables
 
 ## Compliance notes against SignPath Foundation terms
@@ -55,7 +55,7 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ### Privacy and user safety
 
-- The project states: "This program does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it."
+- Privacy statement: "Coinflip does not transfer information to other networked systems unless specifically requested by the user or the person installing or operating it."
 - The project is not a hacking tool and does not include features intended to bypass platform security controls.
 
 ### Roles and approvals
@@ -72,8 +72,8 @@ This document collects the information needed to apply for a free SignPath.io su
 
 ## Honest caveats to mention if asked
 
-- The project is newly public and currently has limited external reputation.
-- The current release binaries are unsigned because SignPath onboarding is not yet complete.
+- The project is newly public and has limited external reputation.
+- Current release binaries are unsigned because SignPath onboarding is not yet complete.
 - The self-hosted Windows build workflow is present in the repository, but actual SignPath integration still depends on onboarding and runner setup.
 
 ## Suggested form/email answers
@@ -86,6 +86,6 @@ Coinflip is a Windows x64 PureBasic desktop application for high-volume fair-coi
 
 Coinflip is distributed as a Windows desktop executable and installer. Trusted code signing would help users verify that published binaries come from the public repository and would reduce Windows trust friction for open-source releases.
 
-### Why SignPath should consider it
+### SignPath fit
 
 The project is fully open source, publicly released, documented, and already includes a public code signing policy, privacy statement, release checklist, and source-controlled release workflow. The project is intended to distribute Windows binaries directly to end users, making repository-to-binary verification especially valuable.

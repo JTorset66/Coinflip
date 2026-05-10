@@ -1,0 +1,471 @@
+# Coinflip User Manual
+
+This manual explains how to operate Coinflip, what each control does, how to read the results, and how to compare simulation modes without accidentally measuring the wrong thing.
+
+Coinflip is a Windows x64 desktop application for high-volume fair-coin simulation, deviation analysis, method comparison, and throughput benchmarking.
+
+## 1. What Coinflip Measures
+
+Coinflip runs many independent fair-coin samples. For each sample it compares the number of heads with the expected 50/50 result:
+
+```text
+absolute deviation = |Heads - ExpectedHeads|
+```
+
+If a sample contains `350,757` flips, the expected number of heads is about half of that. Coinflip stores or plots how far the actual heads count moved away from that expected value.
+
+Important terms:
+
+- `cf` means coin flips.
+- `cf/ms` means coin flips per millisecond.
+- `sample` means one full fair-coin experiment containing the configured number of flips.
+- `deviation` means how far a sample moved away from the expected heads count.
+- `1s`, `2s`, and so on are sigma-scaled deviations. A larger sigma value is a rarer result.
+- `max` is the largest deviation seen in the run.
+
+Coinflip is designed for two related jobs:
+
+- Run strict or direct statistical simulations and inspect the deviation distribution.
+- Compare sampling methods and CPU paths by speed and statistical behaviour.
+
+## 2. The Main Window
+
+The main window is divided into these working areas:
+
+- `Settings`: workload size, sampler mode, binomial method, output file settings, and thread policy.
+- `Run Log`: run history, progress messages, final speed/results, save/load/copy/analyse tools.
+- `Progress`: large percentage display while a run is active.
+- `Live status`: compact status line with progress, ETA, throughput, live speed, and max result.
+- `Plot`: distribution plot for live or loaded deviation data.
+- `Graph controls`: live graph toggle, load data file, and plot threshold.
+
+The app opens maximized and follows Windows display scaling. The View menu changes the app's own UI scale without changing the current window position.
+
+The Help menu opens installed text documents with the user's default text editor:
+
+- `User Manual`: this operating manual.
+- `README`: a shorter overview of the application.
+- `License`: the MIT license text.
+- `Third-Party Notices`: third-party attribution and license notes.
+- `About`: application version, purpose, and credits.
+
+## 3. Quick Start
+
+1. Choose `Flips / sample`.
+2. Choose `Instances / run-block` and `Run-blocks / thread`.
+3. Choose `Sampler`: bit-exact or binomial.
+4. If using binomial mode, choose the binomial method.
+5. Choose a thread policy.
+6. Leave `Save output file` off unless you need a `.data` file.
+7. Choose whether `Live graph` should be selected.
+8. Click `Start`.
+9. Wait for `Finished: complete`.
+10. Click `Analyse` in the Run Log to summarize the visible log.
+
+For method comparisons, run each method more than once. Very short runs can be affected by Windows scheduling, CPU boost, and timer resolution.
+
+## 4. Workload Settings
+
+### Instances / Run-Block
+
+This is how many samples each worker processes in one run-block. Larger values reduce overhead but make each block longer.
+
+### Run-Blocks / Thread
+
+This is how many blocks each thread performs. Total samples are:
+
+```text
+threads x run-blocks/thread x instances/run-block
+```
+
+### Flips / Sample
+
+This is the number of coin flips inside each sample. Larger values make each sample more expensive and change the sigma scale.
+
+### Output Buffer
+
+Used only when `Save output file` is selected. Larger buffers reduce file-write overhead. It does not affect normal log saving.
+
+### Local Batch Samples
+
+Controls how often worker threads flush local progress/data to shared state. Larger batches reduce locking overhead; smaller batches update progress more often.
+
+## 5. Sampler Modes
+
+### Bit-Exact
+
+Bit-exact mode generates random bits and counts them directly:
+
+```text
+1 bit = 1 coin flip
+1 = heads
+0 = tails
+```
+
+This is the strictest simulation path. It is slower than binomial sampling because it performs the individual bit-level coin flip work.
+
+Use bit-exact mode when you want the closest model of actual flip-by-flip generation.
+
+### Binomial
+
+Binomial mode samples the number of heads directly from `Binomial(n, 0.5)`, then computes the same deviation:
+
+```text
+|Heads - n/2|
+```
+
+This avoids generating every individual coin flip bit. It is much faster and is suitable when the deviation distribution is what matters.
+
+Use binomial mode when you want high-speed statistical experiments or want to compare binomial engines.
+
+## 6. Binomial Methods
+
+These controls matter only when `Sampler` is set to `BINOMIAL`.
+
+### BTPE Exact
+
+An exact binomial sampler. Usually very fast for the workload sizes used by Coinflip.
+
+### BTRD Exact
+
+Another exact binomial sampler. It can be faster or slower than BTPE depending on workload and CPU behaviour.
+
+### CLT K Approx
+
+An approximate normal/central-limit style sampler using `K` uniforms. It is not exact. It has a finite tail cap shown in the log, such as:
+
+```text
+CLT tail cap: +/-8.49s
+```
+
+Use this for speed/approximation experiments, not when you need exact binomial tails.
+
+### CPython Exact
+
+An exact path inspired by CPython-style binomial generation behaviour. Useful as another exact comparison point.
+
+## 7. Kernel Policy
+
+Kernel policy matters only in bit-exact mode. It controls how generated random bits are counted.
+
+Options include:
+
+- `SWAR`: portable scalar fallback.
+- `POPCNT`: scalar hardware popcount.
+- `AVX`: 128-bit vector popcount emulation.
+- `AVX2`: 256-bit vector popcount emulation.
+- `AVX-512`: native vector popcount when supported by CPU and OS.
+- `Auto-detect`: chooses the best available supported path.
+
+If a forced kernel is unavailable, Coinflip logs a note and falls back to an available mode.
+
+## 8. Thread Policy
+
+Coinflip uses worker threads for simulation work.
+
+Thread policies:
+
+- `CPUs^2`: default high-throughput policy.
+- `CPUs`: one worker per logical CPU.
+- `Custom`: user-selected thread count.
+
+More threads can improve throughput, but too many can also increase scheduling overhead. For stable benchmarks, keep the same thread policy across compared runs.
+
+## 9. Save Output File
+
+`Save output file` creates a raw binary `.data` file containing one 16-bit value per sample:
+
+```text
+deviation_clamped = Clamp(|Heads - n/2|, 0..65535)
+```
+
+Each sample uses 2 bytes. File size is approximately:
+
+```text
+samples x 2 bytes
+```
+
+This output is for plot loading and external analysis. It is not the same as saving the Run Log.
+
+When output is enabled:
+
+- `Output path` chooses the `.data` file.
+- `Browse` selects the path.
+- `Output buffer` controls buffered binary writing.
+
+When output is off, no `.data` file is written.
+
+## 10. Live Graph and Plot Behaviour
+
+`Live graph` controls whether the run collects distribution data for the live plot while the simulation is running.
+
+- Selected: Coinflip collects plot statistics during the run and refreshes the graph.
+- Not selected: Coinflip skips live graph collection for maximum benchmark speed and leaves the previous plot visible.
+
+The graph selection is captured at run start and locked for the whole run. This is important for fair benchmarking: the log label matches the actual run behaviour.
+
+The plot can also show saved `.data` files loaded with `Load data...`.
+
+### Threshold
+
+The threshold marks high-deviation values on the plot and counts how often deviations reach or exceed that threshold.
+
+Changing the threshold while stopped refreshes the plot. During a run, the threshold is locked so live statistics remain consistent.
+
+## 11. Running, Stopping, and Resetting
+
+### Start
+
+Starts a run with the current settings. The app logs:
+
+- version
+- system and CPU
+- plan
+- output state
+- graph state
+- expected max statistics
+- sampler mode
+- final result and speed
+
+### Stop
+
+Requests a graceful stop. Workers finish current batches, then the run finalizes. Stopped runs may have fewer samples than planned, and the log records actual completed samples.
+
+### Reset
+
+Restores defaults. If a run is active, Coinflip stops first and then resets.
+
+## 12. Reading the Run Log
+
+The Run Log records all visible run information. A completed run includes:
+
+- `Run`: app version.
+- `System`: Windows version.
+- `CPU`: processor name.
+- `Plan`: samples, flips per sample, and threads.
+- `Plan cf`: total planned coin flips.
+- `Output`: output file state.
+- `Graph`: selected or not selected.
+- `Stats`: sigma scale and expected max range.
+- `Mode`: sampler and method/kernel.
+- `Finished`: complete or stopped early.
+- `Result`: max deviation, percent, and sigma.
+- `Speed`: average throughput.
+
+The log only keeps what is currently visible in the log window. The Analyse button analyses the current visible log only.
+
+## 13. Log Buttons
+
+### Load
+
+Loads a saved text log into the Run Log. Loading replaces the visible log contents.
+
+### Save
+
+Saves the current visible Run Log to a text file.
+
+### Append
+
+Controls log saving only.
+
+- Off: Save replaces the selected text file.
+- On: Save appends to the selected text file.
+
+This setting is remembered between app launches.
+
+Saved and appended text sections include a header with time and version:
+
+```text
+============================================================
+Saved 2026-05-10 19:00:00  |  Version 1.12.xxxx.xxxxx
+============================================================
+```
+
+or:
+
+```text
+============================================================
+Appended 2026-05-10 19:00:00  |  Version 1.12.xxxx.xxxxx
+============================================================
+```
+
+### Analyse
+
+Builds a summary report from completed runs in the current visible log.
+
+### Clear
+
+Clears the Run Log window.
+
+### Copy
+
+Copies the full Run Log to the clipboard.
+
+Right-click in the log can copy selected text, or the whole log if nothing is selected.
+
+## 14. Analyse Window
+
+The Analyse window summarizes the current visible Run Log.
+
+It can handle:
+
+- one run
+- repeated runs of one model
+- partial model sets
+- multiple models
+- bit-exact and binomial mixed together
+- graph selected/not-selected pairs
+
+Important sections:
+
+### Key Takeaways
+
+Shows the fastest run, best average model, graph impact summary, and best fit to expected max when available.
+
+### Graph Impact by Model
+
+Compares graph selected vs not selected per matched model.
+
+This section is only meaningful when the same model has at least one selected and one not-selected run.
+
+The impact column is relative to `not selected`:
+
+- `+5%` means graph selected was faster.
+- `-5%` means graph selected was slower.
+
+For proper graph testing, run the same model both ways several times.
+
+### Speed and Result Check
+
+Shows the fastest bit-exact run, fastest binomial run, binomial-vs-bit-exact speed ratio, and expected-max fit.
+
+### Model Comparison
+
+Shows average, best, slowest, max sigma, fit error, and graph selected/not-selected counts for each model.
+
+### Run Details
+
+Shows the top runs by speed from the visible log.
+
+### Save, Copy, and Append
+
+The Analyse window has its own `Save`, `Copy`, and `Append` controls.
+
+- `Save`: saves the analysis summary to a text file.
+- `Copy`: copies the analysis summary.
+- `Append`: controls analysis saving only.
+
+The analysis append setting is separate from the log append setting and is remembered between launches.
+
+Right-click in the analysis text can copy selected lines, or the whole summary if nothing is selected.
+
+## 15. Understanding Accuracy and Expected Max
+
+The log shows an expected maximum sigma range for the planned number of samples. Example:
+
+```text
+expected max 5.72s (5.44..6.11s)
+```
+
+The final result might be:
+
+```text
+Result: max 1695 heads | 0.483% | 5.72s
+```
+
+The Analyse report compares observed max sigma with expected max sigma:
+
+- low fit error means the observed maximum was close to the expected max
+- `in range` counts how many runs were inside the expected range
+
+This is a rough run-level check, not a proof that two methods are identical. Use repeated runs for stronger confidence.
+
+## 16. Benchmarking Guidance
+
+For fair comparisons:
+
+- Keep workload settings identical.
+- Keep thread policy identical.
+- Keep output file off unless you are testing file-output cost.
+- Compare graph selected and not selected with the same model.
+- Run each model several times.
+- Use Analyse averages, not a single run, when possible.
+- Be careful with runs that complete in `0s`; timer resolution and CPU boost can dominate.
+- Do not change settings during a run.
+
+Bit-exact runs are much slower than binomial runs because bit-exact mode generates and counts individual random bits.
+
+Binomial methods can be billions of `cf/ms` because they sample heads directly rather than generating every bit.
+
+## 17. Loaded Data Files
+
+`Load data...` loads a raw `.data` file created by `Save output file` and redraws the plot from that file.
+
+This does not load a Run Log. Use the Run Log `Load` button for text logs.
+
+Loaded data is useful when you want to inspect a saved run's distribution without rerunning the simulation.
+
+## 18. Persistence
+
+Coinflip remembers:
+
+- View scale.
+- Log append setting.
+- Analysis append setting.
+
+These are stored in the user's application data area.
+
+Run logs and analysis summaries are not automatically saved. Use `Save` if you want to keep them.
+
+## 19. Troubleshooting
+
+### The graph seems to affect speed
+
+That is expected. Live graph collection gathers statistics and refreshes the plot. For maximum speed, clear `Live graph` before starting the run.
+
+### Graph selected sometimes looks faster than not selected
+
+Small differences can happen due to Windows scheduling, CPU boost, timer resolution, and short runs. Use repeated runs and Analyse averages.
+
+### A binomial method is much faster than bit-exact
+
+That is expected. Binomial mode samples the number of heads directly. Bit-exact mode performs flip-by-flip bit generation and counting.
+
+### A `.data` file looks unreadable in a text editor
+
+That is expected. `.data` files are raw binary deviation files, not text logs.
+
+### Analyse says no complete runs were found
+
+The visible log must contain completed runs with `Mode`, `Result`, and `Speed` lines.
+
+### Analyse does not compare graph selected/not selected
+
+Run the same model at least once with graph selected and at least once with graph not selected.
+
+### The installer closes a running app
+
+The installer is configured to close Coinflip during install, repair, reinstall, or uninstall so files can be replaced cleanly.
+
+## 20. Privacy
+
+Coinflip does not send data to networked services. Saved logs, analysis summaries, and `.data` files remain local unless the user moves or shares them.
+
+## 21. Installed Files
+
+The installer places Coinflip under:
+
+```text
+Program Files\Coinflip
+```
+
+It also installs:
+
+- `README.txt`
+- `USER_MANUAL.txt`
+- `THIRD_PARTY_NOTICES.txt`
+- `LICENSE.txt`
+
+The repository may keep source documents as Markdown, but the installer places readable `.txt` copies beside the application so the Help menu can open them with the user's default text editor.
+
+The installer creates a desktop shortcut and does not create startup entries or tray behaviour.

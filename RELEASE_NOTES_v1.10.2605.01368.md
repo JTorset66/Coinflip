@@ -2,7 +2,7 @@
 
 Second public release of Coinflip, a PureBasic x64 desktop application for large-scale fair-coin simulation and deviation analysis on Windows.
 
-This release uses the full build release number `1.10.2605.01368`. The executable and installer artifact names remain in the existing `V1.10` naming family.
+Release number: `1.10.2605.01368`. The executable and installer artifact names remain in the existing `V1.10` naming family.
 
 ## Highlights
 
@@ -20,16 +20,16 @@ This release uses the full build release number `1.10.2605.01368`. The executabl
 
 ## Notes
 
-- This is the second public GitHub release of the project.
+- Second public GitHub release of the project.
 - Release binaries may be unsigned until the project finishes trusted code-signing onboarding.
 - The executable and installer names still use `V1.10`, while the GitHub release tag uses the full build version `v1.10.2605.01368`.
 
 ## Included assets
 
-- `Coinflip_V1.10.exe`
-- `Coinflip_V1.10.exe.sha256`
-- `Coinflip_V1.10_Setup.exe`
-- `Coinflip_V1.10_Setup.exe.sha256`
+- `Coinflip_V1.10.2605.01368.exe`
+- `Coinflip_V1.10.2605.01368.exe.sha256`
+- `Coinflip_V1.10.2605.01368_Setup.exe`
+- `Coinflip_V1.10.2605.01368_Setup.exe.sha256`
 
 ## Checksums
 

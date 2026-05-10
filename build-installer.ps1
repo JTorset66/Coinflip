@@ -125,10 +125,26 @@ function Get-ArtifactInfo {
     }
 }
 
+function Remove-StaleInstallerArtifacts {
+    param(
+        [Parameter(Mandatory = $true)]
+        [object]$ArtifactNames
+    )
+
+    $buildDir = Join-Path $repoRoot "build"
+    $staleArtifacts = @()
+    $staleArtifacts += Get-ChildItem -Path $buildDir -Filter "Coinflip_V*_Setup.exe" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne $ArtifactNames.SetupName }
+    $staleArtifacts += Get-ChildItem -Path $buildDir -Filter "Coinflip_V*_Setup.exe.sha256" -File -ErrorAction SilentlyContinue |
+        Where-Object { $_.Name -ne "$($ArtifactNames.SetupName).sha256" }
+
+    $staleArtifacts | Remove-Item -Force
+}
+
 $repoRoot = Split-Path -Parent $MyInvocation.MyCommand.Path
 
 function Sync-InnoAppVersion {
-    $sourcePath = Join-Path $repoRoot "Coinflip_V1.10.pb"
+    $sourcePath = Join-Path $repoRoot "Coinflip_V1.12.pb"
     $installerPath = Join-Path $repoRoot "coinflip.iss"
     $sourceText = Get-Content -LiteralPath $sourcePath -Raw
 
@@ -137,16 +153,26 @@ function Sync-InnoAppVersion {
     }
 
     $appVersion = $Matches[1]
+    $exeName = "Coinflip_V{0}.exe" -f $appVersion
+    $setupName = "Coinflip_V{0}_Setup.exe" -f $appVersion
+    $setupBaseName = [System.IO.Path]::GetFileNameWithoutExtension($setupName)
     $installerText = Get-Content -LiteralPath $installerPath -Raw
-    $updatedInstallerText = [regex]::Replace(
-        $installerText,
-        '(?m)^#define AppVersion "[^"]+"',
-        '#define AppVersion "' + $appVersion + '"',
-        1
-    )
+    $updatedInstallerText = $installerText
+    $updatedInstallerText = [regex]::Replace($updatedInstallerText, '(?m)^#define AppVersion "[^"]+"', '#define AppVersion "' + $appVersion + '"', 1)
+    $updatedInstallerText = [regex]::Replace($updatedInstallerText, '(?m)^#define AppExeName "[^"]+"', '#define AppExeName "' + $exeName + '"', 1)
+    $updatedInstallerText = [regex]::Replace($updatedInstallerText, '(?m)^#define AppSetupName "[^"]+"', '#define AppSetupName "' + $setupName + '"', 1)
+    $updatedInstallerText = [regex]::Replace($updatedInstallerText, '(?m)^OutputBaseFilename=.+$', 'OutputBaseFilename=' + $setupBaseName, 1)
 
     Set-Content -LiteralPath $installerPath -Value $updatedInstallerText -NoNewline
     Write-BuildInfo "Installer version" $appVersion
+    Write-BuildInfo "Installer exe" $exeName
+    Write-BuildInfo "Installer setup" $setupName
+
+    return [PSCustomObject]@{
+        AppVersion = $appVersion
+        ExeName = $exeName
+        SetupName = $setupName
+    }
 }
 Push-Location $repoRoot
 try {
@@ -158,7 +184,8 @@ try {
 
     Write-Host ""
     Write-Host "Installer package"
-    Sync-InnoAppVersion
+    $artifactNames = Sync-InnoAppVersion
+    Remove-StaleInstallerArtifacts -ArtifactNames $artifactNames
 
     $isccPath = Resolve-IsccPath
     $isccArgs = @("/Q", ".\coinflip.iss")
@@ -180,7 +207,7 @@ try {
         throw "Inno Setup compilation failed."
     }
 
-    $setupPath = Join-Path $repoRoot "build\Coinflip_V1.10_Setup.exe"
+    $setupPath = Join-Path $repoRoot ("build\{0}" -f $artifactNames.SetupName)
     if ($CertificateThumbprint) {
         $certificate = Get-CodeSigningCertificate -Thumbprint $CertificateThumbprint
         Sign-ProjectArtifact -Path $setupPath -Certificate $certificate -TimestampServer $TimestampUrl
@@ -190,7 +217,7 @@ try {
     Write-Host ""
     Write-Host "Build artifacts"
     foreach ($artifactPath in @(
-        (Join-Path $repoRoot "build\Coinflip_V1.10.exe"),
+        (Join-Path $repoRoot ("build\{0}" -f $artifactNames.ExeName)),
         $setupPath
     )) {
         $info = Get-ArtifactInfo -Path $artifactPath

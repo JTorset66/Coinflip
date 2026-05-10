@@ -1,8 +1,8 @@
 # Third-Party Notices
 
-The Coinflip application source code is licensed under the MIT License. This file documents third-party material included with the project.
+The Coinflip application source code is licensed under the MIT License. Third-party material included with the project is listed below.
 
-This project includes the following third-party asset.
+Included third-party asset:
 
 ## Noto Emoji Coin Icon
 

@@ -2,6 +2,8 @@
 
 Coinflip is a Windows x64 PureBasic desktop application for high-volume fair-coin simulation, deviation analysis, and throughput benchmarking.
 
+For detailed operating instructions, controls, file behaviours, analysis reports, graph benchmarking, and troubleshooting, see [`USER_MANUAL.txt`](USER_MANUAL.txt).
+
 For each sample, Coinflip runs a fair-coin experiment and records the absolute deviation from the expected 50/50 result:
 
 ```text
@@ -35,6 +37,48 @@ The default workload is **350,757 flips per sample**, and the value can be chang
 - Optional buffered output to raw `.data` files
 - Live bell-curve plot with threshold markers
 - Loading of saved `.data` files back into the plot view
+- Run Log save/load/copy tools with separate persistent append setting
+- Analyse window for visible-log summaries, model comparison, speed/fit checks, and graph selected/not-selected comparisons
+- Analysis save/copy tools with a separate persistent append setting
+- Help menu entries that open the installed user manual, README, license, and third-party notices as readable `.txt` files
+- DPI-aware Windows layout that follows the active Windows display scaling setting
+- Fixed 9/8 UI boost so a 200% Windows display renders controls and text closer to a 225% scale
+- Startup opens directly maximized to the current Windows monitor work area
+- Normal-window layout is based on the boosted DPI-aware `1200x760` layout, clamped to the available work area
+- Fixed-size controls while resizing, with extra window space given to the graph, run log, and status areas
+- Windows-controlled maximize behavior: the maximum window size follows the current monitor work area at any Windows DPI or View scale
+- Numeric input boxes update when the user presses Enter or leaves the field
+- Stable child-window clipping, redraw-batched control state changes, buffered helper text fields, buffered live-status/progress/plot canvases, and redraw-suppressed log appends to reduce flicker
+- High-contrast progress percentage text drawn in white with a black outline
+- Compact run log entries that keep planned setup separate from final results, with `cf/ms` speed text and named total-cf summaries
+
+## Named Number Scale
+
+The derived-values panel and run log keep exact counts, then add a readable short-scale summary for the total coin flips in the simulation. The run log writes planned total `cf` at the start, writes actual `cf` only when a run stops early, and writes exact throughput as `cf/ms` with a readable speed summary such as `about 102 million coin flips per millisecond`. These summaries use this short-scale table:
+
+| Power of 10 | Zeros | Name |
+| ----------: | ----: | ---- |
+| `10^3` | 3 | thousand |
+| `10^6` | 6 | million |
+| `10^9` | 9 | billion |
+| `10^12` | 12 | trillion |
+| `10^15` | 15 | quadrillion |
+| `10^18` | 18 | quintillion |
+| `10^21` | 21 | sextillion |
+| `10^24` | 24 | septillion |
+| `10^27` | 27 | octillion |
+| `10^30` | 30 | nonillion |
+| `10^33` | 33 | decillion |
+| `10^36` | 36 | undecillion |
+| `10^39` | 39 | duodecillion |
+| `10^42` | 42 | tredecillion |
+| `10^45` | 45 | quattuordecillion |
+| `10^48` | 48 | quindecillion |
+| `10^51` | 51 | sexdecillion |
+| `10^54` | 54 | septendecillion |
+| `10^57` | 57 | octodecillion |
+| `10^60` | 60 | novemdecillion |
+| `10^63` | 63 | vigintillion |
 
 ## CPU Paths
 
@@ -58,7 +102,7 @@ deviation_clamped = Clamp(|Heads - n/2|, 0..65535)
 Output files are raw little-endian binary streams, typically named like:
 
 ```text
-Coinflip_V1.10.data
+Coinflip_V1.12.YYMM.minute-of-month.data
 ```
 
 That means:
@@ -68,13 +112,13 @@ That means:
 
 ## Versioning
 
-The public source and artifact names stay at `V1.10`, while build scripts stamp a full build version:
+The public source file is `Coinflip_V1.12.pb`, while build scripts stamp a full build version into metadata and generated artifact filenames:
 
 ```text
-1.10.YYMM.minute-of-month
+1.12.YYMM.minute-of-month
 ```
 
-For example, a May 2026 build may report a version such as `V1.10.2605.01042` in the app and installer metadata.
+For example, a May 2026 build may produce artifacts such as `Coinflip_V1.12.2605.01042.exe` and `Coinflip_V1.12.2605.01042_Setup.exe`.
 
 ## Build Requirements
 
@@ -92,10 +136,10 @@ Build the app:
 .\build-purebasic.ps1
 ```
 
-This compiles `Coinflip_V1.10.pb` into:
+Output executable:
 
 ```text
-build\Coinflip_V1.10.exe
+build\Coinflip_V1.12.YYMM.minute-of-month.exe
 ```
 
 Build the installer:
@@ -104,10 +148,10 @@ Build the installer:
 .\build-installer.ps1
 ```
 
-This builds the app first, then creates:
+The installer build creates:
 
 ```text
-build\Coinflip_V1.10_Setup.exe
+build\Coinflip_V1.12.YYMM.minute-of-month_Setup.exe
 ```
 
 To sign the EXE and installer with a code-signing certificate already installed in the Windows certificate store:
@@ -129,8 +173,9 @@ The installer:
 - installs into `Program Files\Coinflip`
 - creates a desktop shortcut automatically
 - does not create Start Menu shortcuts
-- includes a user-focused README, license, and third-party notices
-- provides installer buttons to read those included files before installation
+- includes readable `.txt` copies of the README, user manual, license, and third-party notices
+- provides installer buttons to read those included files before installation in the user's chosen text editor
+- provides Help menu entries for the installed user manual, README, license, and third-party notices
 - closes a running Coinflip process before install, repair, reinstall, or uninstall file operations
 - offers to launch Coinflip after installation
 - supports repair and uninstall from Windows Apps/Programs maintenance
@@ -140,13 +185,39 @@ The installer:
 
 ## Smart App Control
 
-For Windows Smart App Control compatibility, Microsoft currently requires an RSA-based code-signing certificate from a trusted provider, or Microsoft Trusted Signing. A self-signed or internal test certificate can produce a digital signature, but it will not make Smart App Control trust the app.
+Windows Smart App Control requires an RSA-based code-signing certificate from a trusted provider, or Microsoft Trusted Signing. A self-signed or internal test certificate can produce a digital signature, but Smart App Control will not trust it.
 
 ## Releases
 
-Tagged releases are intended to use the format `v*`.
+Tagged releases and release artifact filenames should use the full stamped version number, for example `v1.12.2605.01042`.
 
-The current public release notes are in [`RELEASE_NOTES_v1.10.2605.01368.md`](RELEASE_NOTES_v1.10.2605.01368.md). The original public release notes are preserved in [`RELEASE_NOTES_v1.10.md`](RELEASE_NOTES_v1.10.md).
+Current changelog and release notes:
+
+- [`RELEASE_NOTES_v1.12.2605.14177.md`](RELEASE_NOTES_v1.12.2605.14177.md)
+- [`RELEASE_NOTES_v1.10.2605.14030.md`](RELEASE_NOTES_v1.10.2605.14030.md)
+- [`RELEASE_NOTES_v1.10.2605.13986.md`](RELEASE_NOTES_v1.10.2605.13986.md)
+- [`RELEASE_NOTES_v1.10.2605.13972.md`](RELEASE_NOTES_v1.10.2605.13972.md)
+- [`RELEASE_NOTES_v1.10.2605.13964.md`](RELEASE_NOTES_v1.10.2605.13964.md)
+- [`RELEASE_NOTES_v1.10.2605.13948.md`](RELEASE_NOTES_v1.10.2605.13948.md)
+
+Previous public release notes:
+
+- [`RELEASE_NOTES_v1.10.2605.13930.md`](RELEASE_NOTES_v1.10.2605.13930.md)
+- [`RELEASE_NOTES_v1.10.2605.13926.md`](RELEASE_NOTES_v1.10.2605.13926.md)
+- [`RELEASE_NOTES_v1.10.2605.13920.md`](RELEASE_NOTES_v1.10.2605.13920.md)
+- [`RELEASE_NOTES_v1.10.2605.13915.md`](RELEASE_NOTES_v1.10.2605.13915.md)
+- [`RELEASE_NOTES_v1.10.2605.13904.md`](RELEASE_NOTES_v1.10.2605.13904.md)
+- [`RELEASE_NOTES_v1.10.2605.13864.md`](RELEASE_NOTES_v1.10.2605.13864.md)
+- [`RELEASE_NOTES_v1.10.2605.13824.md`](RELEASE_NOTES_v1.10.2605.13824.md)
+- [`RELEASE_NOTES_v1.10.2605.13802.md`](RELEASE_NOTES_v1.10.2605.13802.md)
+- [`RELEASE_NOTES_v1.10.2605.13794.md`](RELEASE_NOTES_v1.10.2605.13794.md)
+- [`RELEASE_NOTES_v1.10.2605.13782.md`](RELEASE_NOTES_v1.10.2605.13782.md)
+- [`RELEASE_NOTES_v1.10.2605.13767.md`](RELEASE_NOTES_v1.10.2605.13767.md)
+- [`RELEASE_NOTES_v1.10.2605.10737.md`](RELEASE_NOTES_v1.10.2605.10737.md)
+- [`RELEASE_NOTES_v1.10.2605.10729.md`](RELEASE_NOTES_v1.10.2605.10729.md)
+- [`RELEASE_NOTES_v1.10.2605.10672.md`](RELEASE_NOTES_v1.10.2605.10672.md)
+- [`RELEASE_NOTES_v1.10.2605.01368.md`](RELEASE_NOTES_v1.10.2605.01368.md)
+- [`RELEASE_NOTES_v1.10.md`](RELEASE_NOTES_v1.10.md)
 
 The repository includes a self-hosted GitHub Actions workflow at [`.github/workflows/release-self-hosted.yml`](.github/workflows/release-self-hosted.yml) for controlled Windows builds with PureBasic and Inno Setup installed. The workflow can optionally sign artifacts when a trusted certificate thumbprint is provided through repository secrets.
 
@@ -169,13 +240,13 @@ Coinflip does not transfer information to other networked systems unless specifi
 3. If using binomial mode, choose the binomial method.
 4. Optionally enable `.data` output.
 5. Start the run.
-6. Watch progress, throughput, sigma-scaled maxima, and the live plot.
+6. Watch progress, throughput in `cf/ms`, total coin flips, sigma-scaled maxima, and the live plot. The window follows Windows display scaling, applies a fixed 9/8 UI boost, opens directly maximized to the current Windows work area, and keeps controls at their selected View scale while the graph, run log, and status areas use extra window space.
 7. Load saved `.data` files later for plot analysis if needed.
 
 ## Repository Contents
 
 ```text
-Coinflip_V1.10.pb
+Coinflip_V1.12.pb
 Coinflip.code-workspace
 coinflip.iss
 .github/workflows/release-self-hosted.yml
@@ -187,9 +258,29 @@ Noto_Emoji_Coin.ico
 Noto_Emoji_Coin.png
 README.md
 INSTALLER_README.md
+USER_MANUAL.txt
 THIRD_PARTY_NOTICES.md
 CODE_SIGNING_POLICY.md
 RELEASE_CHECKLIST.md
+RELEASE_NOTES_v1.10.2605.14030.md
+RELEASE_NOTES_v1.10.2605.13986.md
+RELEASE_NOTES_v1.10.2605.13972.md
+RELEASE_NOTES_v1.10.2605.13964.md
+RELEASE_NOTES_v1.10.2605.13948.md
+RELEASE_NOTES_v1.10.2605.13930.md
+RELEASE_NOTES_v1.10.2605.13926.md
+RELEASE_NOTES_v1.10.2605.13920.md
+RELEASE_NOTES_v1.10.2605.13915.md
+RELEASE_NOTES_v1.10.2605.13904.md
+RELEASE_NOTES_v1.10.2605.13864.md
+RELEASE_NOTES_v1.10.2605.13824.md
+RELEASE_NOTES_v1.10.2605.13802.md
+RELEASE_NOTES_v1.10.2605.13794.md
+RELEASE_NOTES_v1.10.2605.13782.md
+RELEASE_NOTES_v1.10.2605.13767.md
+RELEASE_NOTES_v1.10.2605.10737.md
+RELEASE_NOTES_v1.10.2605.10729.md
+RELEASE_NOTES_v1.10.2605.10672.md
 RELEASE_NOTES_v1.10.2605.01368.md
 RELEASE_NOTES_v1.10.md
 SIGNPATH_APPLICATION.md
